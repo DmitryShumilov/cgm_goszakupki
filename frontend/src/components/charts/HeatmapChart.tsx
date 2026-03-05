@@ -10,10 +10,20 @@ interface HeatmapChartProps {
 }
 
 export const HeatmapChart = ({ data, loading = false }: HeatmapChartProps) => {
-  if (loading || !data) {
+  // Показываем загрузку только если loading=true И данных ещё нет
+  if (loading && !data) {
     return (
       <Paper sx={{ p: 2, minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Typography color="text.secondary">Загрузка данных...</Typography>
+      </Paper>
+    );
+  }
+
+  // Показываем сообщение если данных нет
+  if (!data || !data.products || data.products.length === 0) {
+    return (
+      <Paper sx={{ p: 2, minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography color="text.secondary">Нет данных для отображения</Typography>
       </Paper>
     );
   }

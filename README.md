@@ -39,9 +39,28 @@ cgm_goszakupki/
 │   ├── package.json
 │   └── vite.config.ts
 └── docs/
-    ├── README.md              # Общая документация
-    └── FRONTEND.md            # Frontend документация
+    ├── API.md                 # API документация
+    ├── FRONTEND_ARCH.md       # Frontend архитектура
+    ├── DATABASE.md            # База данных
+    ├── TESTING.md             # Руководство по тестам
+    ├── TROUBLESHOOTING.md     # Устранение проблем
+    └── README.md              # Общая документация
+└── CONTRIBUTING.md            # Руководство для разработчиков
 ```
+
+---
+
+## 📚 Документация
+
+| Документ | Описание |
+|----------|----------|
+| [API.md](docs/API.md) | Полная документация по API endpoints |
+| [FRONTEND_ARCH.md](docs/FRONTEND_ARCH.md) | Архитектура frontend приложения |
+| [DATABASE.md](docs/DATABASE.md) | Схема БД, индексы, миграции |
+| [TESTING.md](docs/TESTING.md) | Руководство по тестированию |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Устранение распространённых проблем |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Развёртывание и Docker |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Руководство для разработчиков |
 
 ---
 

@@ -1,6 +1,15 @@
 import { Paper, Typography, Box } from '@mui/material';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
+interface PieLabelProps {
+  cx?: number;
+  cy?: number;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  percent?: number;
+}
+
 interface SuppliersChartProps {
   data: {
     top5: {
@@ -45,9 +54,14 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
     return `${(value / 1e3).toFixed(0)} тыс ₽`;
   };
 
-  const renderCustomizedLabel = (props: any) => {
+  const renderCustomizedLabel = (props: PieLabelProps) => {
     const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
-    
+
+    if (cx === undefined || cy === undefined || midAngle === undefined || 
+        innerRadius === undefined || outerRadius === undefined || percent === undefined) {
+      return null;
+    }
+
     const angle = percent * 360;
     if (angle < 10) return null;
 

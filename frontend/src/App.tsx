@@ -70,12 +70,12 @@ const DashboardContent = () => {
   }, [setAvailableYears, setAvailableMonths, setAvailableRegions, setAvailableCustomers, setAvailableSuppliers, setAvailableProducts]);
 
   const filterParams = {
-    years: selectedYears,
-    months: selectedMonths,
-    regions: selectedRegions,
-    customers: selectedCustomers,
-    suppliers: selectedSuppliers,
-    products: selectedProducts,
+    years: selectedYears.length > 0 ? selectedYears.filter(y => y != null) : undefined,
+    months: selectedMonths.length > 0 ? selectedMonths.filter(m => m != null) : undefined,
+    regions: selectedRegions.length > 0 ? selectedRegions.filter(r => r != null) : undefined,
+    customers: selectedCustomers.length > 0 ? selectedCustomers.filter(c => c != null) : undefined,
+    suppliers: selectedSuppliers.length > 0 ? selectedSuppliers.filter(s => s != null) : undefined,
+    products: selectedProducts.length > 0 ? selectedProducts.filter(p => p != null) : undefined,
   };
 
   const { data: kpiData, isLoading: kpiLoading, error: kpiError, refetch: refetchKpi } = useQuery({
@@ -109,11 +109,16 @@ const DashboardContent = () => {
     enabled: !initError,
   });
 
-  const { data: heatmapData, isLoading: heatmapLoading } = useQuery({
+  const { data: heatmapData, isLoading: heatmapLoading, error: heatmapError } = useQuery({
     queryKey: ['heatmap', filterParams, refreshKey],
     queryFn: () => dashboardApi.getHeatmap(filterParams),
     enabled: !initError,
   });
+
+  // Логируем ошибку heatmap
+  if (heatmapError) {
+    console.error('Heatmap error:', heatmapError);
+  }
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prev) => prev + 1);

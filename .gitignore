@@ -66,7 +66,19 @@ frontend/.env.local
 
 # MCP config with credentials
 mcp-config.json
+mcp-config.json.example
 
 # Test files
 test_*.py
 *_test.py
+
+# Coverage reports
+backend/.coverage
+frontend/coverage/
+
+# Playwright
+frontend/playwright-report/
+frontend/test-results/
+
+# Pytest cache
+.pytest_cache/
