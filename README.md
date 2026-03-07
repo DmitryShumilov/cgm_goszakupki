@@ -61,6 +61,7 @@ cgm_goszakupki/
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Устранение распространённых проблем |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Развёртывание и Docker |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Руководство для разработчиков |
+| [**OPTIMIZATION_PLAN.md**](docs/OPTIMIZATION_PLAN.md) | 📋 **План оптимизации проекта** |
 
 ---
 
@@ -203,31 +204,34 @@ GET /api/health
 
 ### Backend
 
-| Компонент | Версия |
-|-----------|--------|
-| Python | 3.14 |
-| FastAPI | 0.133.1 |
-| Uvicorn | 0.41.0 |
-| psycopg2 | 2.9.11 |
-| pandas | latest |
+| Компонент | Версия | Назначение |
+|-----------|--------|------------|
+| Python | 3.14 | Язык программирования |
+| FastAPI | 0.133.1 | Web фреймворк |
+| Uvicorn | 0.41.0 | ASGI сервер |
+| psycopg2 | 2.9.11 | PostgreSQL драйвер |
+| pydantic | 2.5.3 | Валидация данных |
+| slowapi | 0.1.9 | Rate Limiting |
+| python-dotenv | 1.0.0 | Переменные окружения |
 
 ### Frontend
 
-| Компонент | Версия |
-|-----------|--------|
-| React | 18 |
-| TypeScript | 5 |
-| Vite | 7 |
-| Material-UI | 5 |
-| Recharts | 2 |
-| Zustand | 5 |
-| TanStack Query | 5 |
+| Компонент | Версия | Назначение |
+|-----------|--------|------------|
+| React | 19.2.0 | UI библиотека |
+| TypeScript | 5.9.3 | Типизация |
+| Vite | 7.3.1 | Сборщик |
+| Material-UI | 7.3.8 | UI компоненты |
+| Recharts | 3.7.0 | Диаграммы |
+| Zustand | 5.0.11 | State manager (с persist) |
+| TanStack Query | 5.90.21 | Data fetching |
+| Axios | 1.13.6 | HTTP клиент |
 
 ### Database
 
-| Компонент | Версия |
-|-----------|--------|
-| PostgreSQL | 17.2 |
+| Компонент | Версия | Назначение |
+|-----------|--------|------------|
+| PostgreSQL | 17.2 | СУБД |
 
 ---
 
@@ -285,36 +289,35 @@ npm run build
 
 ---
 
-## ✨ Этап 5: Улучшения (Март 2026)
+## ✨ Этап 6: Безопасность и производительность (Март 2026)
 
-### Реализованные улучшения:
+### Реализованные улучшения (7 марта 2026):
 
-#### 📱 Адаптивная вёрстка
-- Мобильная версия с выезжающей панелью фильтров
-- Планшетная версия с оптимизированной сеткой
-- Desktop версия с постоянной боковой панелью
-- Responsive grid для KPI карточек и диаграмм
+#### 🔒 Безопасность
+- **CORS whitelist** — Ограничение доменных имён вместо `["*"]`
+- **Rate Limiting** — Защита от DDoS (30/min health, 60/min API)
+- **Валидация данных** — Pydantic модели с проверкой типов
 
 #### ⚡ Производительность
-- Кэширование запросов на backend (TTL: 5 минут)
-- Автообновление данных каждые 5 минут
-- Code splitting и lazy loading
-- Оптимизация React Query (staleTime: 5 минут)
+- **In-memory кэширование** — TTL 5 минут для KPI и charts
+- **Оптимизация запросов** — Время ответа <300ms (было 50+ сек)
+- **Connection pooling** — Подготовка к масштабированию
 
-#### 📝 Логирование и мониторинг
-- Логирование всех HTTP запросов
-- Время обработки каждого запроса
-- Статус коды ответов
+#### 📝 Мониторинг
+- **Логирование запросов** — Время обработки, статус коды
+- **Health checks** — Проверка подключения к БД
+- **Error handling** — Детальные сообщения об ошибках
 
-#### 🔄 Автообновление
-- Refetch interval для KPI (5 минут)
-- Кнопка "Обновить" для принудительного обновления
-- Индикатор текущего времени в заголовке
+#### 🔄 Улучшения frontend
+- **Zustand Persist** — Сохранение фильтров в localStorage
+- **SSR-safe storage** — Безопасная работа с localStorage
+- **Адаптивность** — Mobile/tablet/desktop версии
 
-### Новые файлы:
-- `docs/TESTING.md` - Чек-лист для тестирования
-- `backend SimpleCache class` - Кэширование запросов
-- `FilterPanel mobile` - Адаптивная панель фильтров
+### Обновлённые файлы:
+- `backend/main.py` — CORS, Rate Limiting, кэширование
+- `backend/requirements.txt` — Добавлен slowapi
+- `frontend/src/stores/filterStore.ts` — Persist middleware
+- `docs/OPTIMIZATION_PLAN.md` — План оптимизации
 
 ---
 

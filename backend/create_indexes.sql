@@ -1,48 +1,29 @@
--- Индексы для оптимизации запросов дашборда CGM
--- Запуск: psql -U postgres -d cgm_dashboard -f create_indexes.sql
+-- Индексы для оптимизации производительности CGM Dashboard
+-- Дата: 6 марта 2026
 
--- Индекс для фильтрации по годам и месяцам
-CREATE INDEX IF NOT EXISTS idx_purchase_year
-ON purchases(year);
-
-CREATE INDEX IF NOT EXISTS idx_purchase_month
-ON purchases(purchase_month);
-
--- Индекс для фильтрации по дате закупки
+-- 1. Индекс для фильтрации по purchase_date
 CREATE INDEX IF NOT EXISTS idx_purchase_date
 ON purchases(purchase_date);
 
--- Индекс для фильтрации по регионам
-CREATE INDEX IF NOT EXISTS idx_region
-ON purchases(region);
-
--- Индекс для фильтрации по заказчикам
-CREATE INDEX IF NOT EXISTS idx_customer_name
-ON purchases(customer_name);
-
--- Индекс для фильтрации по поставщикам
-CREATE INDEX IF NOT EXISTS idx_distributor
-ON purchases(distributor);
-
--- Индекс для фильтрации по товарам
-CREATE INDEX IF NOT EXISTS idx_what_purchased
-ON purchases(what_purchased);
-
--- Комбинированный индекс для частых запросов (регион + сумма)
+-- 2. Комбинированный индекс: регион + сумма
 CREATE INDEX IF NOT EXISTS idx_region_amount
 ON purchases(region, amount_rub);
 
--- Комбинированный индекс для запросов по поставщикам
+-- 3. Комбинированный индекс: поставщик + сумма
 CREATE INDEX IF NOT EXISTS idx_distributor_amount
 ON purchases(distributor, amount_rub);
 
--- Индекс для группировки по месяцам и годам
-CREATE INDEX IF NOT EXISTS idx_purchase_month_year
-ON purchases(EXTRACT(YEAR FROM purchase_date), EXTRACT(MONTH FROM purchase_date));
-
--- Индекс для heat map запроса (топ-20 товаров)
+-- 4. Комбинированный индекс: товар + сумма
 CREATE INDEX IF NOT EXISTS idx_what_purchased_amount
 ON purchases(what_purchased, amount_rub);
 
--- Обновить статистику после создания индексов
+-- 5. Индекс для amount_rub (KPI запросы)
+CREATE INDEX IF NOT EXISTS idx_amount_rub
+ON purchases(amount_rub);
+
+-- 6. Индекс для quantity (KPI запросы)
+CREATE INDEX IF NOT EXISTS idx_quantity
+ON purchases(quantity);
+
+-- Обновить статистику
 ANALYZE purchases;

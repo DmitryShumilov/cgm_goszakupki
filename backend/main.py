@@ -16,9 +16,6 @@ from fastapi import FastAPI, Query, HTTPException, Request, Body
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import logging
-import logging.handlers
-import sys
 from pydantic import BaseModel, field_validator, model_validator
 from typing import List, Optional, Dict, Any
 import psycopg2
@@ -29,7 +26,15 @@ import time
 import hashlib
 import json
 import os
+import logging
+import logging.handlers
+import sys
 from dotenv import load_dotenv
+
+# Rate Limiting
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -50,13 +55,31 @@ app = FastAPI(
 )
 
 # CORS для frontend
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:80"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    max_age=600,
 )
+
+# ============================================================================
+# Rate Limiting
+# ============================================================================
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# ============================================================================
+# Логирование
+# ============================================================================
 
 # Логирование в файл и консоль
 os.makedirs('logs', exist_ok=True)
@@ -137,16 +160,16 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 
 # ============================================================================
-# Простой кэш с TTL
+# Кэширование (In-memory с TTL)
 # ============================================================================
 
 class SimpleCache:
-    """Простой in-memory кэш с TTL"""
+    """In-memory кэш с TTL"""
     def __init__(self, ttl_seconds: int = 300):
         self._cache = {}
         self._timestamps = {}
         self.ttl = ttl_seconds
-    
+
     def get(self, key: str):
         if key in self._cache:
             if time.time() - self._timestamps[key] < self.ttl:
@@ -155,11 +178,11 @@ class SimpleCache:
                 del self._cache[key]
                 del self._timestamps[key]
         return None
-    
+
     def set(self, key: str, value):
         self._cache[key] = value
         self._timestamps[key] = time.time()
-    
+
     def clear(self):
         self._cache.clear()
         self._timestamps.clear()
@@ -309,7 +332,8 @@ class FilterParams(BaseModel):
 # ============================================================================
 
 @app.post("/api/kpi")
-def get_kpi(filters: Annotated[Optional[FilterParams], Body()] = None):
+@limiter.limit("60/minute")
+def get_kpi(request: Request, filters: Annotated[Optional[FilterParams], Body()] = None):
     """
     Получить KPI карточки (POST для поддержки больших фильтров)
     """
@@ -379,7 +403,8 @@ def get_kpi(filters: Annotated[Optional[FilterParams], Body()] = None):
 # ============================================================================
 
 @app.post("/api/charts/dynamics")
-def get_dynamics(filters: Annotated[Optional[FilterParams], Body()] = None):
+@limiter.limit("60/minute")
+def get_dynamics(request: Request, filters: Annotated[Optional[FilterParams], Body()] = None):
     """
     Динамика закупок по месяцам (POST)
 
@@ -420,7 +445,8 @@ def get_dynamics(filters: Annotated[Optional[FilterParams], Body()] = None):
 
 
 @app.post("/api/charts/regions")
-def get_regions(filters: Annotated[Optional[FilterParams], Body()] = None):
+@limiter.limit("60/minute")
+def get_regions(request: Request, filters: Annotated[Optional[FilterParams], Body()] = None):
     """Топ-10 регионов по сумме контрактов (POST)"""
     if filters is None:
         filters = FilterParams()
@@ -468,7 +494,8 @@ def get_regions(filters: Annotated[Optional[FilterParams], Body()] = None):
 
 
 @app.post("/api/charts/suppliers")
-def get_suppliers(filters: Annotated[Optional[FilterParams], Body()] = None):
+@limiter.limit("60/minute")
+def get_suppliers(request: Request, filters: Annotated[Optional[FilterParams], Body()] = None):
     """Топ-5 поставщиков + Остальные (POST)"""
     if filters is None:
         filters = FilterParams()
@@ -521,7 +548,8 @@ def get_suppliers(filters: Annotated[Optional[FilterParams], Body()] = None):
 
 
 @app.post("/api/charts/categories")
-def get_categories(filters: Annotated[Optional[FilterParams], Body()] = None):
+@limiter.limit("60/minute")
+def get_categories(request: Request, filters: Annotated[Optional[FilterParams], Body()] = None):
     """Категории товаров (Что закупали) (POST)"""
     if filters is None:
         filters = FilterParams()
@@ -555,7 +583,8 @@ def get_categories(filters: Annotated[Optional[FilterParams], Body()] = None):
 
 
 @app.post("/api/charts/heatmap")
-def get_heatmap(filters: Annotated[Optional[FilterParams], Body()] = None):
+@limiter.limit("60/minute")
+def get_heatmap(request: Request, filters: Annotated[Optional[FilterParams], Body()] = None):
     """
     Тепловая карта: доля товаров по месяцам (POST)
 
@@ -756,7 +785,8 @@ def get_products_list():
 # ============================================================================
 
 @app.get("/api/health")
-def health_check():
+@limiter.limit("30/minute")
+def health_check(request: Request):
     """Проверка подключения к БД"""
     try:
         conn = get_db_connection()
@@ -771,7 +801,8 @@ def health_check():
 
 
 @app.get("/")
-def root():
+@limiter.limit("30/minute")
+def root(request: Request):
     """Корневой endpoint"""
     return {
         "message": "CGM Dashboard API",

@@ -282,18 +282,40 @@ docker exec -it cgm-postgres pg_isready
 | `POSTGRES_PASSWORD` | Пароль БД | `changeme` |
 | `POSTGRES_DATABASE` | Имя БД | `cgm_dashboard` |
 | `POSTGRES_PORT` | Порт БД | `5432` |
+| `POSTGRES_HOST` | Хост БД | `localhost` |
 | `BACKEND_PORT` | Порт backend API | `8000` |
 | `FRONTEND_PORT` | Порт frontend | `80` |
+| `ALLOWED_ORIGINS` | CORS whitelist | `http://localhost:5173,http://localhost:80` |
+| `REDIS_HOST` | Redis хост (опционально) | `localhost` |
+| `REDIS_PORT` | Redis порт (опционально) | `6379` |
 
 ---
 
 ## Безопасность
 
-1. **Измените пароль по умолчанию** в `.env`
-2. **Используйте secrets** для чувствительных данных в production
-3. **Настройте firewall** для ограничения доступа
-4. **Включите HTTPS** через reverse proxy (nginx, traefik)
-5. **Регулярно обновляйте** образы Docker
+### Реализованные меры (7 марта 2026)
+
+1. **CORS whitelist** — Разрешены только доверенные домены
+   ```python
+   allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:80").split(",")
+   ```
+
+2. **Rate Limiting** — Ограничение запросов для защиты от DDoS
+   - Health endpoint: 30 запросов/минуту
+   - API endpoints: 60 запросов/минуту
+
+3. **Валидация данных** — Pydantic модели с проверкой:
+   - Годы: 1900-2100
+   - Месяцы: 1-12
+   - Строки: макс. 500 символов
+   - Даты: формат YYYY-MM-DD
+
+### Рекомендации для production
+
+4. **Используйте secrets** для чувствительных данных в Docker
+5. **Настройте firewall** для ограничения доступа к портам
+6. **Включите HTTPS** через reverse proxy (nginx, traefik)
+7. **Регулярно обновляйте** зависимости
 
 ---
 

@@ -39,6 +39,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE:-cgm_dashboard}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:80}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -74,6 +75,24 @@ services:
     networks:
       - cgm-network
 
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cgm-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cgm-network
+    command: redis-server --appendonly yes
+
 networks:
   cgm-network:
     driver: bridge
@@ -82,4 +101,6 @@ volumes:
   postgres_data:
     driver: local
   backend_logs:
+    driver: local
+  redis_data:
     driver: local

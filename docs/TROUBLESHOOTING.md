@@ -409,21 +409,54 @@ volumes:
 
 **Решение:**
 
-1. **Оптимизировать backend запросы:**
-   - Проверить индексы
-   - Включить кэширование
+1. **Проверить время ответа API:**
+```bash
+curl -w "Time: %{time_total}s\n" -X POST http://localhost:8000/api/kpi -H "Content-Type: application/json" -d "{}"
+```
 
-2. **Оптимизировать frontend:**
-   ```bash
-   # Проверить размер бандла
-   npm run build
-   
-   # Включить code splitting (уже настроено)
-   ```
+Ожидаемое время: **<300ms**
 
-3. **Проверить network:**
-   - Открыть DevTools → Network
-   - Найти медленные запросы
+2. **Проверить индексы БД:**
+```sql
+-- Проверить наличие индексов
+SELECT indexname FROM pg_indexes WHERE tablename = 'purchases';
+
+-- Создать индексы если отсутствуют
+\i backend/create_indexes.sql
+
+-- Обновить статистику
+ANALYZE purchases;
+```
+
+3. **Проверить кэширование:**
+```python
+# Убедиться что SimpleCache используется
+# backend/main.py должен содержать:
+cache = SimpleCache(ttl_seconds=300)
+```
+
+---
+
+### KPI загружается >1 секунды
+
+**Симптомы:** KPI карточки отображаются долго
+
+**Причина:** Проблемы с подключением к Redis (если настроен)
+
+**Решение (7 марта 2026):**
+- Redis временно отключён
+- Используется in-memory кэш SimpleCache
+- Время ответа: <300ms
+
+Если нужен Redis:
+```bash
+# Запустить Redis
+docker run -d -p 6379:6379 redis:7-alpine
+
+# Настроить в .env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+```
 
 ---
 
@@ -436,7 +469,7 @@ volumes:
 # Ограничить размер кэша
 cache = SimpleCache(ttl_seconds=300)  # TTL 5 минут
 
-# Использовать Redis для production
+# Кэш автоматически очищается по TTL
 ```
 
 ---
@@ -449,8 +482,33 @@ cache = SimpleCache(ttl_seconds=300)  # TTL 5 минут
 1. Ограничить топ-20 товаров (уже реализовано)
 2. Добавить индекс:
 ```sql
-CREATE INDEX idx_what_purchased_amount 
+CREATE INDEX idx_what_purchased_amount
 ON purchases(what_purchased, amount_rub);
+```
+
+---
+
+### Rate Limiting срабатывает слишком часто
+
+**Симптомы:** Ошибка 429 Too Many Requests
+
+**Причина:** Превышен лимит запросов
+
+**Лимиты:**
+- `/api/health`: 30 запросов/минуту
+- `/api/*`: 60 запросов/минуту
+
+**Решение:**
+1. Увеличить лимиты в `backend/main.py`:
+```python
+@app.get("/api/health")
+@limiter.limit("100/minute")  # Было 30/minute
+```
+
+2. Кэшировать запросы на frontend (уже настроено):
+```typescript
+// React Query staleTime: 5 минут
+staleTime: 5 * 60 * 1000
 ```
 
 ---
