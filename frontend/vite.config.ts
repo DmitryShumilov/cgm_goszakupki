@@ -14,4 +14,17 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          charts: ['recharts'],
+          ui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+          utils: ['axios', '@tanstack/react-query', 'zustand'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+  },
 })

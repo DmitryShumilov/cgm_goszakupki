@@ -150,7 +150,6 @@ export const KpiPanel = ({ data, loading = false }: KpiPanelProps) => {
     {
       title: 'Общая сумма закупок',
       value: data ? formatCurrency(data.total_amount) : '—',
-      subtitle: data ? `${formatNumber(data.total_amount)} RUB` : undefined,
     },
     {
       title: 'Количество контрактов',

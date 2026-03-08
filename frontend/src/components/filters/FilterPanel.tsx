@@ -35,16 +35,19 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
     selectedYears,
     selectedMonths,
     selectedRegions,
+    selectedCustomers,
     selectedSuppliers,
     selectedProducts,
     availableYears,
     availableMonths,
     availableRegions,
+    availableCustomers,
     availableSuppliers,
     availableProducts,
     toggleYear,
     toggleMonth,
     toggleRegion,
+    toggleCustomer,
     toggleSupplier,
     toggleProduct,
     selectAllYears,
@@ -64,10 +67,9 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
   const sidebarContent = (
     <Box sx={{
       height: '100%',
-      background: 'linear-gradient(180deg, #0D2B4A 0%, #1a3a5c 100%)',
       color: '#FFFFFF',
     }}>
-      <Box sx={{ p: 2, height: '100%' }}>
+      <Box sx={{ p: 2, minHeight: '100%' }}>
         <Box sx={{ mb: 3 }}>
           <Button
             size="small"
@@ -233,8 +235,24 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 />
               ))
             }
-            sx={{
-              '& .MuiChip-label': { color: '#FFFFFF' },
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
             }}
           />
         </Paper>
@@ -264,9 +282,9 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
               });
             }}
             renderInput={(params) => (
-              <TextField 
-                {...params} 
-                placeholder="Выберите регионы" 
+              <TextField
+                {...params}
+                placeholder="Выберите регионы"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     color: '#FFFFFF',
@@ -289,7 +307,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   label={option.length > 15 ? option.slice(0, 15) + '...' : option}
                   {...getTagProps({ index })}
                   size="small"
-                  sx={{ 
+                  sx={{
                     background: 'rgba(0, 180, 219, 0.3)',
                     color: '#FFFFFF',
                     border: '1px solid rgba(255,255,255,0.2)',
@@ -297,8 +315,104 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 />
               ))
             }
-            sx={{
-              '& .MuiChip-label': { color: '#FFFFFF' },
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
+            }}
+          />
+        </Paper>
+
+        <Paper sx={{
+          p: 2,
+          mb: 2,
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '13px', mb: 1, color: '#FFFFFF' }}>Заказчик</Typography>
+          <Autocomplete
+            multiple
+            size="small"
+            options={availableCustomers}
+            value={selectedCustomers}
+            onChange={(_, newValue) => {
+              availableCustomers.forEach((c) => {
+                if (!newValue.includes(c) && selectedCustomers.includes(c)) {
+                  toggleCustomer(c);
+                }
+              });
+              newValue.forEach((c) => {
+                if (!selectedCustomers.includes(c)) {
+                  toggleCustomer(c);
+                }
+              });
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Выберите заказчиков"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: '#FFFFFF',
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(255,255,255,0.5)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(255,255,255,0.6)',
+                  },
+                }}
+              />
+            )}
+            renderTags={(value, getTagProps) =>
+              value.slice(0, 3).map((option, index) => (
+                <Chip
+                  label={option.length > 15 ? option.slice(0, 15) + '...' : option}
+                  {...getTagProps({ index })}
+                  size="small"
+                  sx={{
+                    background: 'rgba(0, 180, 219, 0.3)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                  }}
+                />
+              ))
+            }
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
             }}
           />
         </Paper>
@@ -328,8 +442,8 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
               });
             }}
             renderInput={(params) => (
-              <TextField 
-                {...params} 
+              <TextField
+                {...params}
                 placeholder="Выберите поставщиков"
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -353,7 +467,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   label={option.length > 20 ? option.slice(0, 20) + '...' : option}
                   {...getTagProps({ index })}
                   size="small"
-                  sx={{ 
+                  sx={{
                     background: 'rgba(0, 180, 219, 0.3)',
                     color: '#FFFFFF',
                     border: '1px solid rgba(255,255,255,0.2)',
@@ -361,8 +475,24 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 />
               ))
             }
-            sx={{
-              '& .MuiChip-label': { color: '#FFFFFF' },
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
             }}
           />
         </Paper>
@@ -414,6 +544,20 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
             '& .MuiDrawer-paper': {
               width: 280,
               boxSizing: 'border-box',
+              background: 'linear-gradient(180deg, #0D2B4A 0%, #1a3a5c 100%)',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(255,255,255,0.05)',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(255,255,255,0.2)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: 'rgba(255,255,255,0.3)',
+              },
             },
           }}
         >
@@ -436,6 +580,20 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
           border: 'none',
           height: '100vh',
           overflow: 'auto',
+          background: 'linear-gradient(180deg, #0D2B4A 0%, #1a3a5c 100%)',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(255,255,255,0.05)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'rgba(255,255,255,0.3)',
+          },
         },
       }}
     >

@@ -1,256 +1,250 @@
-# CGM Dashboard - Документация проекта
+# 📚 CGM Dashboard Documentation
 
-## 📊 Описание проекта
-
-Дашборд для визуализации данных о госзакупках CGM. Данные импортируются из Excel файла и отображаются в веб-интерфейсе с фильтрами и диаграммами.
+Добро пожаловать в документацию проекта CGM Dashboard!
 
 ---
 
-## 🏗 Архитектура
+## 🏗️ Архитектура системы
 
+### Общая схема
+
+```mermaid
+flowchart LR
+    subgraph "Data Sources"
+        Excel[📊 Excel файл<br/>database.xlsx]
+    end
+    
+    subgraph "Database Layer"
+        PostgreSQL[(🗄️ PostgreSQL 17<br/>cgm_dashboard)]
+    end
+    
+    subgraph "Backend Layer"
+        FastAPI[⚡ FastAPI<br/>Port 8000]
+        Cache[💾 SimpleCache<br/>TTL 5 min]
+    end
+    
+    subgraph "Frontend Layer"
+        React[⚛️ React 19<br/>Port 5173]
+        MUI[🎨 Material-UI]
+        Charts[📈 Recharts]
+    end
+    
+    subgraph "Users"
+        Browser[👥 Пользователь<br/>Browser]
+    end
+    
+    Excel -->|Import| PostgreSQL
+    PostgreSQL <--> FastAPI
+    FastAPI <--> Cache
+    FastAPI -->|REST API| React
+    React --> MUI
+    React --> Charts
+    React --> Browser
 ```
-┌─────────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────┐
-│  Excel файл     │ --> │  PostgreSQL  │ --> │  FastAPI    │ --> │ Frontend │
-│  database.xlsx  │     │  cgm_dashboard│    │  API (8000) │     │ (Vite)   │
-└─────────────────┘     └──────────────┘     └─────────────┘     └──────────┘
-```
+
+### Диаграммы в документации
+
+Каждый документ содержит архитектурные диаграммы:
+
+| Документ | Диаграммы |
+|----------|-----------|
+| [API.md](API.md) | Request Flow |
+| [FRONTEND_ARCH.md](FRONTEND_ARCH.md) | Component Structure, Data Flow, State Machine |
+| [DATABASE.md](DATABASE.md) | ER Diagram, Data Flow, Index Usage |
+| [TESTING.md](TESTING.md) | CI/CD Pipeline |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Decision Tree, Health Check Flow |
+| [DEPLOYMENT.md](../DEPLOYMENT.md) | Docker Architecture |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | Git Flow, PR Process |
 
 ---
 
-## 📁 Структура проекта
+## 🎯 Быстрые ссылки
 
-```
-C:\Users\Дмитрий\Dashboards\cgm_goszakupki\
-├── database.xlsx              # Исходный Excel файл
-├── import_excel_to_pg.py      # Скрипт импорта данных
-├── setup_database.py          # Скрипт создания БД
-├── backend/
-│   ├── main.py                # FastAPI сервер
-│   └── requirements.txt       # Python зависимости
-└── docs/
-    └── README.md              # Этот файл
-```
-
----
-
-## 🚀 Быстрый старт
-
-### 1. Запуск PostgreSQL
-
-PostgreSQL должен быть запущен. Если нет:
-
-```powershell
-& "C:\Program Files\PostgreSQL\17\bin\pg_ctl.exe" -D "C:\pg_data" -l "C:\pg_data\logfile.log" start
-```
-
-### 2. Импорт данных (если ещё не импортированы)
-
-```bash
-cd C:\Users\Дмитрий\Dashboards\cgm_goszakupki
-python import_excel_to_pg.py
-```
-
-### 3. Запуск Backend API
-
-```bash
-cd C:\Users\Дмитрий\Dashboards\cgm_goszakupki\backend
-python main.py
-```
-
-API доступен по адресу: **http://localhost:8000**
-
-Swagger документация: **http://localhost:8000/docs**
-
----
-
-## 📡 API Endpoints
-
-### KPI
-
-| Endpoint | Описание |
+| Документ | Описание |
 |----------|----------|
-| `GET /api/kpi` | Получить 6 KPI метрик |
-
-**Пример ответа:**
-```json
-{
-  "total_amount": 23492055000.0,
-  "contract_count": 1802,
-  "avg_contract_amount": 13036672.64,
-  "total_quantity": 5596485.0,
-  "avg_price_per_unit": 4197.64,
-  "customer_count": 257
-}
-```
-
-### Диаграммы
-
-| Endpoint | Описание |
-|----------|----------|
-| `GET /api/charts/dynamics` | Динамика закупок (комбо: сумма + количество) |
-| `GET /api/charts/regions` | Топ-10 регионов |
-| `GET /api/charts/suppliers` | Топ-5 поставщиков + остальные |
-| `GET /api/charts/categories` | Категории товаров |
-| `GET /api/charts/heatmap` | Тепловая карта (матрица товаров по месяцам) |
-
-### Фильтры
-
-| Endpoint | Описание |
-|----------|----------|
-| `GET /api/filters/years` | Список годов (2024-2034) |
-| `GET /api/filters/months` | Список месяцев (1-12) |
-| `GET /api/filters/regions` | Список регионов |
-| `GET /api/filters/customers` | Список заказчиков |
-| `GET /api/filters/suppliers` | Список поставщиков |
-| `GET /api/filters/products` | Список товаров |
-
-### Применение фильтров
-
-Все endpoints поддерживают фильтры через query параметры:
-
-```
-GET /api/kpi?years=2024,2025&regions=Москва,СПб&suppliers=Медиалайн
-```
-
-**Параметры:**
-- `years` - годы (через запятую)
-- `months` - месяцы (1-12, через запятую)
-- `regions` - регионы (через запятую)
-- `customers` - заказчики (через запятую)
-- `suppliers` - поставщики (через запятую)
-- `products` - товары (через запятую)
+| [📡 API](API.md) | Полная документация по API endpoints |
+| [🏗️ Frontend Architecture](FRONTEND_ARCH.md) | Архитектура frontend приложения |
+| [🗄️ Database](DATABASE.md) | Схема БД, индексы, миграции |
+| [🧪 Testing](TESTING.md) | Руководство по тестированию |
+| [🔧 Troubleshooting](TROUBLESHOOTING.md) | Устранение проблем |
+| [🚀 Deployment](../DEPLOYMENT.md) | Развёртывание и Docker |
+| [🤝 Contributing](../CONTRIBUTING.md) | Руководство для разработчиков |
 
 ---
 
-## 📊 Модель данных
+## 📖 Для кого эта документация
 
-### Таблица `purchases`
+### Для разработчиков
 
-| Колонка | Тип | Описание |
-|---------|-----|----------|
-| `id` | SERIAL | ID записи |
-| `customer_name` | TEXT | Заказчик |
-| `region` | TEXT | Регион |
-| `what_purchased` | TEXT | Что закупали |
-| `price_rub` | REAL | Цена за единицу |
-| `quantity` | REAL | Количество |
-| `amount_rub` | REAL | Сумма контракта |
-| `distributor` | TEXT | Поставщик |
-| `year` | INTEGER | Год закупки |
-| `purchase_date` | DATE | Дата закупки (рассчитанная) |
-| `purchase_month` | TEXT | Месяц закупки (YYYY-MM) |
+- [Contributing Guide](../CONTRIBUTING.md) — начало работы
+- [Frontend Architecture](FRONTEND_ARCH.md) — структура кода
+- [Testing Guide](TESTING.md) — как писать тесты
+- [API Documentation](API.md) — endpoints
 
-### Логика расчёта `purchase_date`
+### Для DevOps
 
-```python
-if год(contract_date) == year:
-    purchase_date = contract_date
-else:
-    purchase_date = contract_date.replace(year=year)
-```
+- [Deployment Guide](../DEPLOYMENT.md) — развёртывание
+- [Database Guide](DATABASE.md) — БД и индексы
+- [Troubleshooting](TROUBLESHOOTING.md) — частые проблемы
+
+### Для аналитиков
+
+- [API Documentation](API.md) — как получать данные
+- [Database Guide](DATABASE.md) — схема данных
 
 ---
 
-## 🎯 KPI метрики
+## 🏁 Начало работы
 
-| № | Метрика | Формула |
-|---|---------|---------|
-| 1 | Общая сумма закупок | SUM(amount_rub) |
-| 2 | Количество контрактов | COUNT(*) |
-| 3 | Средняя сумма контракта | SUM(amount_rub) / COUNT(*) |
-| 4 | Общий объём (шт) | SUM(quantity) |
-| 5 | Средняя цена за единицу | SUM(amount_rub) / SUM(quantity) |
-| 6 | Количество заказчиков | COUNT(DISTINCT customer_name) |
+### 1. Клонировать репозиторий
 
----
-
-## 🛠 Технические детали
-
-### Версии ПО
-
-| Компонент | Версия |
-|-----------|--------|
-| PostgreSQL | 17.2 |
-| Python | 3.14 |
-| FastAPI | 0.133.1 |
-| Uvicorn | 0.41.0 |
-| psycopg2 | 2.9.11 |
-
-### Порты
-
-| Сервис | Порт |
-|--------|------|
-| PostgreSQL | 5432 |
-| FastAPI | 8000 |
-
-### База данных
-
-- **Хост:** localhost
-- **Порт:** 5432
-- **Пользователь:** postgres
-- **База:** cgm_dashboard
-
----
-
-## 📝 Скрипты
-
-### import_excel_to_pg.py
-
-Импорт данных из Excel в PostgreSQL.
-
-**Запуск:**
 ```bash
-python import_excel_to_pg.py
+git clone <repository-url>
+cd cgm_goszakupki
 ```
 
-**Что делает:**
-1. Читает `database.xlsx`
-2. Применяет логику временной привязки
-3. Создаёт таблицу `purchases`
-4. Вставляет данные
-5. Выводит статистику
+### 2. Установить зависимости
 
-### setup_database.py
-
-Проверка и создание базы данных.
-
-**Запуск:**
 ```bash
-python setup_database.py
+# Backend
+cd backend
+pip install -r requirements.txt
+
+# Frontend
+cd frontend
+npm install
 ```
+
+### 3. Запустить сервисы
+
+```bash
+# PostgreSQL
+& "C:\Program Files\PostgreSQL\17\bin\pg_ctl.exe" start -D "C:\pg_data"
+
+# Backend
+cd backend
+uvicorn main:app --reload
+
+# Frontend (новый терминал)
+cd frontend
+npm run dev
+```
+
+### 4. Открыть дашборд
+
+http://localhost:5173
 
 ---
 
-## 🔧 Устранение проблем
+## 📋 Содержание документации
 
-### PostgreSQL не запускается
+### API Documentation
 
-```powershell
-# Проверка статуса
-& "C:\Program Files\PostgreSQL\17\bin\pg_ctl.exe" status -D "C:\pg_data"
+- [KPI Endpoints](API.md#kpi-endpoints)
+- [Charts Endpoints](API.md#charts-endpoints)
+- [Filters Endpoints](API.md#filters-endpoints)
+- [Health Check](API.md#health-check)
+- [Коды ошибок](API.md#коды-ошибок)
+- [Примеры запросов](API.md#примеры-запросов)
 
-# Запуск
-& "C:\Program Files\PostgreSQL\17\bin\pg_ctl.exe" start -D "C:\pg_data" -l "C:\pg_data\logfile.log"
-```
+### Frontend Architecture
 
-### API не отвечает
+- [Обзор технологий](FRONTEND_ARCH.md#обзор-технологий)
+- [Структура проекта](FRONTEND_ARCH.md#структура-проекта)
+- [Компоненты](FRONTEND_ARCH.md#компоненты)
+- [State Management](FRONTEND_ARCH.md#state-management)
+- [API Client](FRONTEND_ARCH.md#api-client)
+- [Стилизация](FRONTEND_ARCH.md#стилизация)
+- [Тестирование](FRONTEND_ARCH.md#тестирование)
 
-1. Проверьте, что PostgreSQL запущен
-2. Проверьте лог ошибок FastAPI
-3. Перезапустите сервер:
-   ```bash
-   cd backend
-   python main.py
-   ```
+### Database
 
-### Ошибки импорта
+- [Схема данных](DATABASE.md#схема-данных)
+- [Индексы](DATABASE.md#индексы)
+- [Миграции](DATABASE.md#миграции)
+- [Подключение](DATABASE.md#подключение)
+- [Примеры запросов](DATABASE.md#примеры-запросов)
+- [Backup](DATABASE.md#backup-и-восстановление)
 
-1. Проверьте, что Excel файл существует
-2. Проверьте права доступа к файлу
-3. Убедитесь, что PostgreSQL доступен
+### Testing
+
+- [Backend тесты](TESTING.md#backend-тесты)
+- [Frontend тесты](TESTING.md#frontend-тесты)
+- [E2E тесты](TESTING.md#e2e-тесты)
+- [CI/CD интеграция](TESTING.md#ci/cd-интеграция)
+- [Best Practices](TESTING.md#best-practices)
+
+### Troubleshooting
+
+- [Backend проблемы](TROUBLESHOOTING.md#backend-проблемы)
+- [Frontend проблемы](TROUBLESHOOTING.md#frontend-проблемы)
+- [Database проблемы](TROUBLESHOOTING.md#database-проблемы)
+- [Docker проблемы](TROUBLESHOOTING.md#docker-проблемы)
+- [Производительность](TROUBLESHOOTING.md#производительность)
 
 ---
 
-## 📞 Контакты
+## 🛠️ Технологии
 
-По вопросам обращайтесь к разработчику.
+### Backend
+
+| Технология | Версия | Назначение |
+|------------|--------|------------|
+| Python | 3.14 | Язык программирования |
+| FastAPI | 0.133+ | Web фреймворк |
+| PostgreSQL | 17+ | База данных |
+| psycopg2 | 2.9+ | PostgreSQL драйвер |
+
+### Frontend
+
+| Технология | Версия | Назначение |
+|------------|--------|------------|
+| React | 19+ | UI библиотека |
+| TypeScript | 5+ | Типизация |
+| Material-UI | 7+ | UI компоненты |
+| Recharts | 3+ | Диаграммы |
+| Zustand | 5+ | State management |
+
+---
+
+## 📊 Метрики проекта
+
+| Метрика | Значение |
+|---------|----------|
+| Backend тестов | 45 |
+| Frontend тестов | 37 |
+| E2E сценариев | 19 |
+| Backend coverage | 92% |
+| Frontend coverage | 38% |
+| API endpoints | 13 |
+| Компонентов React | 8 |
+
+---
+
+## 🔗 Дополнительные ресурсы
+
+- [GitHub Repository](#)
+- [Swagger UI](http://localhost:8000/docs)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [React Documentation](https://react.dev/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+
+---
+
+## ❓ Вопросы
+
+Если у вас возникли вопросы:
+
+1. Проверьте [Troubleshooting Guide](TROUBLESHOOTING.md)
+2. Поищите в [issue tracker](#)
+3. Создайте новый issue
+
+---
+
+## 📝 Лицензия
+
+Внутренний проект для компании.
+
+---
+
+**Последнее обновление:** 5 марта 2026 г.
