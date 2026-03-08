@@ -235,8 +235,24 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 />
               ))
             }
-            sx={{
-              '& .MuiChip-label': { color: '#FFFFFF' },
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
             }}
           />
         </Paper>
@@ -266,9 +282,9 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
               });
             }}
             renderInput={(params) => (
-              <TextField 
-                {...params} 
-                placeholder="Выберите регионы" 
+              <TextField
+                {...params}
+                placeholder="Выберите регионы"
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     color: '#FFFFFF',
@@ -291,7 +307,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   label={option.length > 15 ? option.slice(0, 15) + '...' : option}
                   {...getTagProps({ index })}
                   size="small"
-                  sx={{ 
+                  sx={{
                     background: 'rgba(0, 180, 219, 0.3)',
                     color: '#FFFFFF',
                     border: '1px solid rgba(255,255,255,0.2)',
@@ -299,8 +315,24 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 />
               ))
             }
-            sx={{
-              '& .MuiChip-label': { color: '#FFFFFF' },
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
             }}
           />
         </Paper>
@@ -363,8 +395,24 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 />
               ))
             }
-            sx={{
-              '& .MuiChip-label': { color: '#FFFFFF' },
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
             }}
           />
         </Paper>
@@ -394,8 +442,8 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
               });
             }}
             renderInput={(params) => (
-              <TextField 
-                {...params} 
+              <TextField
+                {...params}
                 placeholder="Выберите поставщиков"
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -419,7 +467,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   label={option.length > 20 ? option.slice(0, 20) + '...' : option}
                   {...getTagProps({ index })}
                   size="small"
-                  sx={{ 
+                  sx={{
                     background: 'rgba(0, 180, 219, 0.3)',
                     color: '#FFFFFF',
                     border: '1px solid rgba(255,255,255,0.2)',
@@ -427,8 +475,24 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 />
               ))
             }
-            sx={{
-              '& .MuiChip-label': { color: '#FFFFFF' },
+            slotProps={{
+              paper: {
+                sx: {
+                  background: 'linear-gradient(180deg, #1a3a5c 0%, #0D2B4A 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '& .MuiAutocomplete-option': {
+                    color: '#FFFFFF',
+                    '&:hover': {
+                      background: 'rgba(0, 180, 219, 0.2)',
+                    },
+                    '&[aria-selected="true"]': {
+                      background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
+                      color: '#FFFFFF',
+                    },
+                  },
+                },
+              },
             }}
           />
         </Paper>

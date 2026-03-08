@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, model_validator
 from typing import List, Optional, Dict, Any
 import psycopg2
+import psycopg2.pool
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from functools import lru_cache
@@ -30,6 +31,7 @@ import logging
 import logging.handlers
 import sys
 from dotenv import load_dotenv
+from contextlib import contextmanager
 
 # Rate Limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -47,6 +49,36 @@ DB_CONFIG = {
     'password': os.getenv('POSTGRES_PASSWORD'),
     'database': os.getenv('POSTGRES_DATABASE', 'cgm_dashboard')
 }
+
+# ============================================================================
+# Connection Pool для PostgreSQL
+# ============================================================================
+
+# Глобальный пул соединений (min 1, max 10)
+connection_pool = psycopg2.pool.SimpleConnectionPool(
+    1,   # minconn — минимальное число соединений
+    10,  # maxconn — максимальное число соединений
+    **DB_CONFIG
+)
+
+
+@contextmanager
+def get_db_connection():
+    """Получение подключения к БД из пула"""
+    conn = connection_pool.getconn()
+    try:
+        yield conn
+    finally:
+        connection_pool.putconn(conn)
+
+
+@app.on_event("shutdown")
+def shutdown_db_pool():
+    """Закрытие всех соединений при остановке приложения"""
+    if connection_pool:
+        connection_pool.closeall()
+        logger.info("Database connection pool closed")
+
 
 app = FastAPI(
     title="CGM Dashboard API",
@@ -202,9 +234,28 @@ def get_cache_key(prefix: str, filters: dict) -> str:
 # Вспомогательные функции
 # ============================================================================
 
-def get_db_connection():
-    """Получение подключения к БД"""
-    return psycopg2.connect(**DB_CONFIG)
+
+@contextmanager
+def get_db_cursor():
+    """
+    Контекстный менеджер для получения курсора БД
+    Автоматически commit/rollback и закрытие ресурсов
+    """
+    conn = None
+    cur = None
+    try:
+        with get_db_connection() as conn:
+            cur = conn.cursor(cursor_factory=RealDictCursor)
+            yield cur
+            conn.commit()
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.error(f"Database error: {e}")
+        raise
+    finally:
+        if cur:
+            cur.close()
 
 
 def build_filter_clause(filters: dict) -> tuple:
@@ -350,54 +401,45 @@ def get_kpi(request: Request, filters: Annotated[Optional[FilterParams], Body()]
 
     where_clause, params = build_filter_clause(filter_dict)
 
-    conn = None
-    cur = None
     try:
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        with get_db_cursor() as cur:
+            query = f"""
+            SELECT
+                COALESCE(SUM(amount_rub), 0) as total_amount,
+                COUNT(*) as contract_count,
+                COALESCE(AVG(amount_rub), 0) as avg_contract_amount,
+                COALESCE(SUM(quantity), 0) as total_quantity,
+                CASE
+                    WHEN COALESCE(SUM(quantity), 0) = 0 THEN 0
+                    ELSE COALESCE(SUM(amount_rub), 0) / SUM(quantity)
+                END as avg_price_per_unit,
+                COUNT(DISTINCT customer_name) as customer_count
+            FROM purchases
+            {where_clause}
+            """
 
-        query = f"""
-        SELECT
-            COALESCE(SUM(amount_rub), 0) as total_amount,
-            COUNT(*) as contract_count,
-            COALESCE(AVG(amount_rub), 0) as avg_contract_amount,
-            COALESCE(SUM(quantity), 0) as total_quantity,
-            CASE
-                WHEN COALESCE(SUM(quantity), 0) = 0 THEN 0
-                ELSE COALESCE(SUM(amount_rub), 0) / SUM(quantity)
-            END as avg_price_per_unit,
-            COUNT(DISTINCT customer_name) as customer_count
-        FROM purchases
-        {where_clause}
-        """
+            cur.execute(query, params)
+            result = cur.fetchone()
 
-        cur.execute(query, params)
-        result = cur.fetchone()
+            response = {
+                "total_amount": float(result['total_amount']),
+                "contract_count": int(result['contract_count']),
+                "avg_contract_amount": float(result['avg_contract_amount']),
+                "total_quantity": float(result['total_quantity']),
+                "avg_price_per_unit": float(result['avg_price_per_unit']),
+                "customer_count": int(result['customer_count'])
+            }
 
-        response = {
-            "total_amount": float(result['total_amount']),
-            "contract_count": int(result['contract_count']),
-            "avg_contract_amount": float(result['avg_contract_amount']),
-            "total_quantity": float(result['total_quantity']),
-            "avg_price_per_unit": float(result['avg_price_per_unit']),
-            "customer_count": int(result['customer_count'])
-        }
+            # Сохранение в кэш
+            cache.set(cache_key, response)
 
-        # Сохранение в кэш
-        cache.set(cache_key, response)
-
-        return response
+            return response
     except ValueError as e:
         logger.error(f"Validation error in get_kpi: {e}")
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         logger.error(f"Error in get_kpi: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
 # ============================================================================
 # API Endpoints - Charts
 # ============================================================================
@@ -416,27 +458,22 @@ def get_dynamics(request: Request, filters: Annotated[Optional[FilterParams], Bo
         filters = FilterParams()
 
     where_clause, params = build_filter_clause(filters.model_dump() if hasattr(filters, 'model_dump') else {})
-    
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    
-    query = f"""
-    SELECT 
-        purchase_month,
-        SUM(amount_rub) as amount,
-        SUM(quantity) as quantity
-    FROM purchases
-    {where_clause}
-    GROUP BY purchase_month
-    ORDER BY purchase_month
-    """
-    
-    cur.execute(query, params)
-    results = cur.fetchall()
-    
-    cur.close()
-    conn.close()
-    
+
+    with get_db_cursor() as cur:
+        query = f"""
+        SELECT
+            purchase_month,
+            SUM(amount_rub) as amount,
+            SUM(quantity) as quantity
+        FROM purchases
+        {where_clause}
+        GROUP BY purchase_month
+        ORDER BY purchase_month
+        """
+
+        cur.execute(query, params)
+        results = cur.fetchall()
+
     return {
         "labels": [r['purchase_month'] for r in results],
         "amounts": [float(r['amount']) for r in results],
@@ -453,37 +490,32 @@ def get_regions(request: Request, filters: Annotated[Optional[FilterParams], Bod
 
     where_clause, params = build_filter_clause(filters.model_dump() if hasattr(filters, 'model_dump') else {})
 
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    with get_db_cursor() as cur:
+        # Получаем топ-10
+        query = f"""
+        SELECT
+            region,
+            SUM(amount_rub) as amount,
+            COUNT(*) as count
+        FROM purchases
+        {where_clause}
+        GROUP BY region
+        ORDER BY amount DESC
+        LIMIT 10
+        """
 
-    # Получаем топ-10
-    query = f"""
-    SELECT
-        region,
-        SUM(amount_rub) as amount,
-        COUNT(*) as count
-    FROM purchases
-    {where_clause}
-    GROUP BY region
-    ORDER BY amount DESC
-    LIMIT 10
-    """
+        cur.execute(query, params)
+        results = cur.fetchall()
 
-    cur.execute(query, params)
-    results = cur.fetchall()
+        # Получаем общую сумму по всем регионам (с теми же фильтрами)
+        total_query = f"""
+        SELECT COALESCE(SUM(amount_rub), 0) as total
+        FROM purchases
+        {where_clause}
+        """
 
-    # Получаем общую сумму по всем регионам (с теми же фильтрами)
-    total_query = f"""
-    SELECT COALESCE(SUM(amount_rub), 0) as total
-    FROM purchases
-    {where_clause}
-    """
-    
-    cur.execute(total_query, params)
-    total = cur.fetchone()['total']
-
-    cur.close()
-    conn.close()
+        cur.execute(total_query, params)
+        total = cur.fetchone()['total']
 
     return {
         "labels": [r['region'] for r in results],
@@ -499,44 +531,39 @@ def get_suppliers(request: Request, filters: Annotated[Optional[FilterParams], B
     """Топ-5 поставщиков + Остальные (POST)"""
     if filters is None:
         filters = FilterParams()
-    
+
     where_clause, params = build_filter_clause(filters.model_dump() if hasattr(filters, 'model_dump') else {})
-    
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    
-    # Получаем общую сумму
-    total_query = f"""
-    SELECT COALESCE(SUM(amount_rub), 0) as total
-    FROM purchases
-    {where_clause}
-    """
-    
-    cur.execute(total_query, params)
-    total = cur.fetchone()['total']
-    
-    # Получаем топ-5
-    query = f"""
-    SELECT 
-        distributor,
-        SUM(amount_rub) as amount
-    FROM purchases
-    {where_clause}
-    GROUP BY distributor
-    ORDER BY amount DESC
-    LIMIT 5
-    """
-    
-    cur.execute(query, params)
-    results = cur.fetchall()
-    
-    # Считаем остальные
-    top5_sum = sum(float(r['amount']) for r in results)
-    others = max(0, float(total) - top5_sum)
-    
-    cur.close()
-    conn.close()
-    
+
+    with get_db_cursor() as cur:
+        # Получаем общую сумму
+        total_query = f"""
+        SELECT COALESCE(SUM(amount_rub), 0) as total
+        FROM purchases
+        {where_clause}
+        """
+
+        cur.execute(total_query, params)
+        total = cur.fetchone()['total']
+
+        # Получаем топ-5
+        query = f"""
+        SELECT
+            distributor,
+            SUM(amount_rub) as amount
+        FROM purchases
+        {where_clause}
+        GROUP BY distributor
+        ORDER BY amount DESC
+        LIMIT 5
+        """
+
+        cur.execute(query, params)
+        results = cur.fetchall()
+
+        # Считаем остальные
+        top5_sum = sum(float(r['amount']) for r in results)
+        others = max(0, float(total) - top5_sum)
+
     return {
         "top5": {
             "labels": [r['distributor'] for r in results],
@@ -556,26 +583,21 @@ def get_categories(request: Request, filters: Annotated[Optional[FilterParams], 
 
     where_clause, params = build_filter_clause(filters.model_dump() if hasattr(filters, 'model_dump') else {})
 
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    with get_db_cursor() as cur:
+        query = f"""
+        SELECT
+            what_purchased,
+            SUM(amount_rub) as amount
+        FROM purchases
+        {where_clause}
+        GROUP BY what_purchased
+        ORDER BY amount DESC
+        LIMIT 7
+        """
 
-    query = f"""
-    SELECT
-        what_purchased,
-        SUM(amount_rub) as amount
-    FROM purchases
-    {where_clause}
-    GROUP BY what_purchased
-    ORDER BY amount DESC
-    LIMIT 7
-    """
-    
-    cur.execute(query, params)
-    results = cur.fetchall()
-    
-    cur.close()
-    conn.close()
-    
+        cur.execute(query, params)
+        results = cur.fetchall()
+
     return {
         "labels": [r['what_purchased'] for r in results],
         "amounts": [float(r['amount']) for r in results]
@@ -598,77 +620,70 @@ def get_heatmap(request: Request, filters: Annotated[Optional[FilterParams], Bod
 
     where_clause, params = build_filter_clause(filters.model_dump() if hasattr(filters, 'model_dump') else {})
 
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    # Получаем топ-20 товаров по сумме
-    products_query = f"""
-    SELECT
-        what_purchased,
-        SUM(amount_rub) as total_amount
-    FROM purchases
-    {where_clause}
-    GROUP BY what_purchased
-    ORDER BY total_amount DESC
-    LIMIT 20
-    """
-
-    cur.execute(products_query, params)
-    top_products = [row['what_purchased'] for row in cur.fetchall()]
-
-    if not top_products:
-        cur.close()
-        conn.close()
-        return {"products": [], "months": [], "matrix": []}
-
-    # Получаем сумму по каждому товару из топ-20 в каждом месяце
-    # Используем те же параметры + top_products для IN clause
-    placeholders = ','.join(['%s'] * len(top_products))
-    
-    # Если есть where_clause, добавляем IN condition через AND
-    if where_clause:
-        query = f"""
+    with get_db_cursor() as cur:
+        # Получаем топ-20 товаров по сумме
+        products_query = f"""
         SELECT
             what_purchased,
-            purchase_month,
-            SUM(amount_rub) as amount
+            SUM(amount_rub) as total_amount
         FROM purchases
         {where_clause}
-        AND what_purchased IN ({placeholders})
-        GROUP BY what_purchased, purchase_month
-        ORDER BY what_purchased, purchase_month
+        GROUP BY what_purchased
+        ORDER BY total_amount DESC
+        LIMIT 20
         """
-        cur.execute(query, params + top_products)
-    else:
-        query = f"""
+
+        cur.execute(products_query, params)
+        top_products = [row['what_purchased'] for row in cur.fetchall()]
+
+        if not top_products:
+            return {"products": [], "months": [], "matrix": []}
+
+        # Получаем сумму по каждому товару из топ-20 в каждом месяце
+        # Используем те же параметры + top_products для IN clause
+        placeholders = ','.join(['%s'] * len(top_products))
+
+        # Если есть where_clause, добавляем IN condition через AND
+        if where_clause:
+            query = f"""
+            SELECT
+                what_purchased,
+                purchase_month,
+                SUM(amount_rub) as amount
+            FROM purchases
+            {where_clause}
+            AND what_purchased IN ({placeholders})
+            GROUP BY what_purchased, purchase_month
+            ORDER BY what_purchased, purchase_month
+            """
+            cur.execute(query, params + top_products)
+        else:
+            query = f"""
+            SELECT
+                what_purchased,
+                purchase_month,
+                SUM(amount_rub) as amount
+            FROM purchases
+            WHERE what_purchased IN ({placeholders})
+            GROUP BY what_purchased, purchase_month
+            ORDER BY what_purchased, purchase_month
+            """
+            cur.execute(query, top_products)
+
+        results = cur.fetchall()
+
+        # Получаем общую сумму по каждому месяцу
+        total_query = f"""
         SELECT
-            what_purchased,
             purchase_month,
-            SUM(amount_rub) as amount
+            SUM(amount_rub) as total
         FROM purchases
-        WHERE what_purchased IN ({placeholders})
-        GROUP BY what_purchased, purchase_month
-        ORDER BY what_purchased, purchase_month
+        {where_clause}
+        GROUP BY purchase_month
         """
-        cur.execute(query, top_products)
-    
-    results = cur.fetchall()
-    
-    # Получаем общую сумму по каждому месяцу
-    total_query = f"""
-    SELECT 
-        purchase_month,
-        SUM(amount_rub) as total
-    FROM purchases
-    {where_clause}
-    GROUP BY purchase_month
-    """
-    
-    cur.execute(total_query, params)
-    totals = {r['purchase_month']: float(r['total']) for r in cur.fetchall()}
-    
-    cur.close()
-    conn.close()
+
+        cur.execute(total_query, params)
+        totals = {r['purchase_month']: float(r['total']) for r in cur.fetchall()}
 
     # Формируем матрицу
     months = sorted(set(r['purchase_month'] for r in results))
@@ -707,76 +722,58 @@ def get_heatmap(request: Request, filters: Annotated[Optional[FilterParams], Bod
 @app.get("/api/filters/years")
 def get_years():
     """Доступные годы"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT year FROM purchases WHERE year IS NOT NULL ORDER BY year")
-    years = [row[0] for row in cur.fetchall()]
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("SELECT DISTINCT year FROM purchases WHERE year IS NOT NULL ORDER BY year")
+        years = [row[0] for row in cur.fetchall()]
     return years
 
 
 @app.get("/api/filters/months")
 def get_months():
     """Доступные месяцы (1-12)"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT DISTINCT EXTRACT(MONTH FROM TO_DATE(purchase_month, 'YYYY-MM')) as month
-        FROM purchases
-        ORDER BY month
-    """)
-    months = [int(row[0]) for row in cur.fetchall()]
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT EXTRACT(MONTH FROM TO_DATE(purchase_month, 'YYYY-MM')) as month
+            FROM purchases
+            ORDER BY month
+        """)
+        months = [int(row[0]) for row in cur.fetchall()]
     return months
 
 
 @app.get("/api/filters/regions")
 def get_regions_list():
     """Доступные регионы"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT region FROM purchases ORDER BY region")
-    regions = [row[0] for row in cur.fetchall()]
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("SELECT DISTINCT region FROM purchases ORDER BY region")
+        regions = [row[0] for row in cur.fetchall()]
     return regions
 
 
 @app.get("/api/filters/customers")
 def get_customers_list():
     """Доступные заказчики"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT customer_name FROM purchases ORDER BY customer_name")
-    customers = [row[0] for row in cur.fetchall()]
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("SELECT DISTINCT customer_name FROM purchases ORDER BY customer_name")
+        customers = [row[0] for row in cur.fetchall()]
     return customers
 
 
 @app.get("/api/filters/suppliers")
 def get_suppliers_list():
     """Доступные поставщики"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT distributor FROM purchases ORDER BY distributor")
-    suppliers = [row[0] for row in cur.fetchall()]
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("SELECT DISTINCT distributor FROM purchases ORDER BY distributor")
+        suppliers = [row[0] for row in cur.fetchall()]
     return suppliers
 
 
 @app.get("/api/filters/products")
 def get_products_list():
     """Доступные товары"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT what_purchased FROM purchases ORDER BY what_purchased")
-    products = [row[0] for row in cur.fetchall()]
-    cur.close()
-    conn.close()
+    with get_db_cursor() as cur:
+        cur.execute("SELECT DISTINCT what_purchased FROM purchases ORDER BY what_purchased")
+        products = [row[0] for row in cur.fetchall()]
     return products
 
 
@@ -789,12 +786,9 @@ def get_products_list():
 def health_check(request: Request):
     """Проверка подключения к БД"""
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM purchases")
-        count = cur.fetchone()[0]
-        cur.close()
-        conn.close()
+        with get_db_cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM purchases")
+            count = cur.fetchone()[0]
         return {"status": "ok", "records": count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -33,6 +33,12 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
 
   const COLORS = ['#00B4DB', '#00B894', '#FFA502', '#A55EEA', '#2193b0', '#9E9E9E'];
 
+  // Вычисляем сумму топ-5 поставщиков
+  const top5Sum = data.top5.amounts.reduce((sum, val) => sum + val, 0);
+
+  // Вычисляем процент: (сумма топ-5 / общая сумма) * 100
+  const percentage = data.total > 0 ? ((top5Sum / data.total) * 100).toFixed(1) : '0';
+
   const chartData = [
     ...data.top5.labels.map((label, index) => ({
       name: label.length > 30 ? label.slice(0, 30) + '...' : label,
@@ -94,20 +100,20 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
       backdropFilter: 'blur(20px)',
       border: '1px solid rgba(255, 255, 255, 0.2)',
     }}>
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          fontWeight: 600, 
-          fontSize: '11px', 
-          mb: 1, 
-          pb: 1, 
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 600,
+          fontSize: '11px',
+          mb: 1,
+          pb: 1,
           borderBottom: '2px solid #00B4DB',
           letterSpacing: '0.5px',
           textTransform: 'uppercase',
           color: 'rgba(0, 0, 0, 0.7)',
         }}
       >
-        🏢 Топ-5 Поставщиков
+        🏢 Топ-5 Поставщиков ({percentage}%)
       </Typography>
       <Box sx={{ display: 'flex', height: 'calc(100% - 50px)', alignItems: 'center' }}>
         <Box sx={{ flex: '0 0 280px', height: 280 }}>
