@@ -75,24 +75,6 @@ services:
     networks:
       - cgm-network
 
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: cgm-redis
-    restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - cgm-network
-    command: redis-server --appendonly yes
-
 networks:
   cgm-network:
     driver: bridge
@@ -101,6 +83,4 @@ volumes:
   postgres_data:
     driver: local
   backend_logs:
-    driver: local
-  redis_data:
     driver: local

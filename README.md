@@ -8,6 +8,27 @@
 
 ---
 
+## ⚡ Быстрый старт (для новых разработчиков)
+
+**Первый запуск проекта:**
+
+```powershell
+# 1. Установка зависимостей
+.\install_project.ps1
+
+# 2. Проверка конфигурации
+.\check_project.ps1
+
+# 3. Запуск проекта
+.\start_project.ps1
+```
+
+**Откройте в браузере:** http://localhost:5173
+
+📖 **Подробная инструкция:** [QUICKSTART.md](QUICKSTART.md)
+
+---
+
 ## 🏗 Архитектура
 
 ```
@@ -23,45 +44,85 @@
 
 ```
 cgm_goszakupki/
-├── database.xlsx              # Исходный Excel файл
-├── import_excel_to_pg.py      # Скрипт импорта данных
-├── setup_database.py          # Скрипт создания БД
-├── backend/
-│   ├── main.py                # FastAPI сервер
-│   └── requirements.txt       # Python зависимости
-├── frontend/
-│   ├── src/
-│   │   ├── api/               # API клиент
-│   │   ├── components/        # React компоненты
-│   │   ├── stores/            # Zustand store
-│   │   ├── App.tsx            # Главный компонент
-│   │   └── main.tsx           # Точка входа
-│   ├── package.json
-│   └── vite.config.ts
-└── docs/
-    ├── API.md                 # API документация
-    ├── FRONTEND_ARCH.md       # Frontend архитектура
-    ├── DATABASE.md            # База данных
-    ├── TESTING.md             # Руководство по тестам
-    ├── TROUBLESHOOTING.md     # Устранение проблем
-    └── README.md              # Общая документация
-└── CONTRIBUTING.md            # Руководство для разработчиков
+├── 📄 Скрипты автоматизации
+│   ├── install_project.ps1       # Установка зависимостей
+│   ├── start_project.ps1         # Запуск проекта
+│   ├── stop_project.ps1          # Остановка проекта
+│   ├── check_project.ps1         # Проверка конфигурации
+│   ├── setup_encoding.ps1        # Настройка UTF-8 кодировки
+│   ├── convert_to_utf8bom.ps1    # Конвертация в UTF-8 с BOM
+│   └── profile_template.ps1      # Шаблон профиля PowerShell
+│
+├── 📄 Конфигурация
+│   ├── .env                      # Переменные окружения
+│   ├── .env.example              # Шаблон конфигурации
+│   ├── .editorconfig             # Стандарты кодировки
+│   └── docker-compose.yml        # Docker конфигурация
+│
+├── 📊 Данные
+│   ├── database.xlsx             # Исходный Excel файл
+│   └── import_excel_to_pg.py     # Скрипт импорта данных
+│
+├── 🖥 Backend (Python/FastAPI)
+│   ├── backend/
+│   │   ├── main.py               # API сервер
+│   │   ├── requirements.txt      # Python зависимости
+│   │   └── logs/                 # Логи сервера
+│
+├── 🌐 Frontend (React/Vite)
+│   ├── frontend/
+│   │   ├── src/                  # Исходный код
+│   │   │   ├── api/              # API клиент
+│   │   │   ├── components/       # React компоненты
+│   │   │   ├── stores/           # Zustand store
+│   │   │   ├── App.tsx           # Главный компонент
+│   │   │   └── main.tsx          # Точка входа
+│   │   ├── package.json          # Node.js зависимости
+│   │   └── vite.config.ts        # Конфигурация Vite
+│
+├── 📚 Документация
+│   ├── README.md                 # Этот файл
+│   ├── QUICKSTART.md             # Быстрый старт
+│   ├── TROUBLESHOOTING_RUN.md    # Решение проблем запуска
+│   ├── DEVELOPMENT.md            # Руководство разработчика
+│   └── docs/                     # Подробная документация
+│       ├── POWERSHELL_ENCODING.md # Настройка UTF-8
+│       ├── API.md                # API документация
+│       ├── DATABASE.md           # База данных
+│       └── ...
+│
+└── 📝 Логи
+    └── logs/                     # Логи backend и frontend
 ```
 
 ---
 
 ## 📚 Документация
 
+### Для быстрого старта
+| Документ | Описание |
+|----------|----------|
+| [**QUICKSTART.md**](QUICKSTART.md) | ⚡ Быстрый старт за 5 минут |
+| [**TROUBLESHOOTING_RUN.md**](TROUBLESHOOTING_RUN.md) | 🔧 Решение проблем при запуске |
+| [**DEVELOPMENT.md**](DEVELOPMENT.md) | 🛠 Руководство разработчика |
+
+### Настройка окружения
+| Документ | Описание |
+|----------|----------|
+| [**docs/POWERSHELL_ENCODING.md**](docs/POWERSHELL_ENCODING.md) | 🔧 Настройка UTF-8 кодировки PowerShell |
+
+### Основная документация
 | Документ | Описание |
 |----------|----------|
 | [API.md](docs/API.md) | Полная документация по API endpoints |
-| [FRONTEND_ARCH.md](docs/FRONTEND_ARCH.md) | Архитектура frontend приложения |
 | [DATABASE.md](docs/DATABASE.md) | Схема БД, индексы, миграции |
+| [FRONTEND_ARCH.md](docs/FRONTEND_ARCH.md) | Архитектура frontend приложения |
 | [TESTING.md](docs/TESTING.md) | Руководство по тестированию |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Устранение распространённых проблем |
+| [QA_AUDIT.md](docs/QA_AUDIT.md) | 📊 Отчёт об аудите качества (92.15/100) |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Развёртывание и Docker |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Руководство для разработчиков |
-| [**OPTIMIZATION_PLAN.md**](docs/OPTIMIZATION_PLAN.md) | 📋 **План оптимизации проекта** |
+| [OPTIMIZATION_PLAN.md](docs/OPTIMIZATION_PLAN.md) | 📋 План оптимизации проекта |
 
 ---
 
@@ -83,10 +144,22 @@ cgm_goszakupki/
 
 ### Шаг 2: Импорт данных (если не импортированы)
 
+**Вариант А: Быстрое обновление (для пользователя)**
+
+```powershell
+# Дважды кликните на файл update_database.bat
+# ИЛИ в PowerShell:
+.\update_database.bat
+```
+
+**Вариант Б: Ручной запуск скрипта**
+
 ```bash
-cd C:\Users\Дмитрий\Dashboards\cgm_goszakupki
+cd C:\Dashboards\cgm_goszakupki
 python import_excel_to_pg.py
 ```
+
+📄 **Подробная инструкция:** [docs/UPDATE_INSTRUCTION.md](docs/UPDATE_INSTRUCTION.md)
 
 ### Шаг 3: Запуск Backend API
 
@@ -137,7 +210,7 @@ npm run dev
 
 1. **Динамика закупок** - Комбо: сумма (столбцы) + количество (линия)
 2. **Топ-10 регионов** - Горизонтальный bar chart с % доли от общей суммы
-3. **Топ-5 поставщиков** - Круговая + Остальные с % доли в заголовке
+3. **Топ-5 поставщиков** - Круговая + Остальные с % доли в заголовке (адаптивная легенда)
 4. **Что закупали** - Круговая (Топ-7 категорий)
 5. **Тепловая карта** - Матрица: товары × месяцы (%)
 

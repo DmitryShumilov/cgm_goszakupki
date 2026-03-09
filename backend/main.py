@@ -72,43 +72,6 @@ def get_db_connection():
         connection_pool.putconn(conn)
 
 
-@app.on_event("shutdown")
-def shutdown_db_pool():
-    """Закрытие всех соединений при остановке приложения"""
-    if connection_pool:
-        connection_pool.closeall()
-        logger.info("Database connection pool closed")
-
-
-app = FastAPI(
-    title="CGM Dashboard API",
-    description="API для дашборда госзакупок",
-    version="1.0.0"
-)
-
-# CORS для frontend
-allowed_origins = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:80"
-).split(",")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
-    max_age=600,
-)
-
-# ============================================================================
-# Rate Limiting
-# ============================================================================
-
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
 # ============================================================================
 # Логирование
 # ============================================================================
@@ -140,6 +103,47 @@ console_handler.setLevel(logging.INFO)
 # Настройка логгера
 logging.basicConfig(level=logging.INFO, handlers=[file_handler, console_handler])
 logger = logging.getLogger(__name__)
+
+
+app = FastAPI(
+    title="CGM Dashboard API",
+    description="API для дашборда госзакупок",
+    version="1.0.0"
+)
+
+
+@app.on_event("shutdown")
+def shutdown_db_pool():
+    """Закрытие всех соединений при остановке приложения"""
+    try:
+        if connection_pool:
+            connection_pool.closeall()
+            logger.info("Database connection pool closed")
+    except Exception as e:
+        logger.warning(f"Error closing connection pool: {e}")
+
+# CORS для frontend
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:80"
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    max_age=600,
+)
+
+# ============================================================================
+# Rate Limiting
+# ============================================================================
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -724,7 +728,7 @@ def get_years():
     """Доступные годы"""
     with get_db_cursor() as cur:
         cur.execute("SELECT DISTINCT year FROM purchases WHERE year IS NOT NULL ORDER BY year")
-        years = [row[0] for row in cur.fetchall()]
+        years = [row['year'] for row in cur.fetchall()]
     return years
 
 
@@ -737,7 +741,7 @@ def get_months():
             FROM purchases
             ORDER BY month
         """)
-        months = [int(row[0]) for row in cur.fetchall()]
+        months = [int(row['month']) for row in cur.fetchall()]
     return months
 
 
@@ -746,7 +750,7 @@ def get_regions_list():
     """Доступные регионы"""
     with get_db_cursor() as cur:
         cur.execute("SELECT DISTINCT region FROM purchases ORDER BY region")
-        regions = [row[0] for row in cur.fetchall()]
+        regions = [row['region'] for row in cur.fetchall()]
     return regions
 
 
@@ -755,7 +759,7 @@ def get_customers_list():
     """Доступные заказчики"""
     with get_db_cursor() as cur:
         cur.execute("SELECT DISTINCT customer_name FROM purchases ORDER BY customer_name")
-        customers = [row[0] for row in cur.fetchall()]
+        customers = [row['customer_name'] for row in cur.fetchall()]
     return customers
 
 
@@ -764,7 +768,7 @@ def get_suppliers_list():
     """Доступные поставщики"""
     with get_db_cursor() as cur:
         cur.execute("SELECT DISTINCT distributor FROM purchases ORDER BY distributor")
-        suppliers = [row[0] for row in cur.fetchall()]
+        suppliers = [row['distributor'] for row in cur.fetchall()]
     return suppliers
 
 
@@ -773,7 +777,7 @@ def get_products_list():
     """Доступные товары"""
     with get_db_cursor() as cur:
         cur.execute("SELECT DISTINCT what_purchased FROM purchases ORDER BY what_purchased")
-        products = [row[0] for row in cur.fetchall()]
+        products = [row['what_purchased'] for row in cur.fetchall()]
     return products
 
 
@@ -788,10 +792,12 @@ def health_check(request: Request):
     try:
         with get_db_cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM purchases")
-            count = cur.fetchone()[0]
+            result = cur.fetchone()
+            count = result['count'] if result else 0
         return {"status": "ok", "records": count}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Health check error: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 @app.get("/")

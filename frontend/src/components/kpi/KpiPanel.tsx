@@ -3,12 +3,11 @@ import { Box, Grid, Paper, Typography, Skeleton } from '@mui/material';
 interface KpiCardProps {
   title: string;
   value: string | number;
-  subtitle?: string;
   gradient: string;
   loading?: boolean;
 }
 
-const KpiCard = ({ title, value, subtitle, gradient, loading = false }: KpiCardProps) => {
+const KpiCard = ({ title, value, gradient, loading = false }: KpiCardProps) => {
   if (loading) {
     return (
       <Paper sx={{ 
@@ -69,10 +68,10 @@ const KpiCard = ({ title, value, subtitle, gradient, loading = false }: KpiCardP
         >
           {title}
         </Typography>
-        <Typography 
-          variant="h4" 
-          component="div" 
-          sx={{ 
+        <Typography
+          variant="h4"
+          component="div"
+          sx={{
             fontWeight: 700,
             color: '#FFFFFF',
             letterSpacing: '-0.5px',
@@ -82,19 +81,6 @@ const KpiCard = ({ title, value, subtitle, gradient, loading = false }: KpiCardP
         >
           {value}
         </Typography>
-        {subtitle && (
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: 'rgba(255, 255, 255, 0.7)',
-              fontSize: '11px',
-              mt: 0.5,
-              display: 'block',
-            }}
-          >
-            {subtitle}
-          </Typography>
-        )}
       </Box>
     </Paper>
   );
@@ -181,7 +167,6 @@ export const KpiPanel = ({ data, loading = false }: KpiPanelProps) => {
             <KpiCard
               title={card.title}
               value={card.value}
-              subtitle={card.subtitle}
               gradient={gradients[index]}
               loading={loading}
             />

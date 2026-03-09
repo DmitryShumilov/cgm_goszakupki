@@ -93,8 +93,8 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
   };
 
   return (
-    <Paper sx={{ 
-      p: 3, 
+    <Paper sx={{
+      p: 3,
       height: 400,
       background: 'rgba(255, 255, 255, 0.98)',
       backdropFilter: 'blur(20px)',
@@ -115,16 +115,29 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
       >
         🏢 Топ-5 Поставщиков ({percentage}%)
       </Typography>
-      <Box sx={{ display: 'flex', height: 'calc(100% - 50px)', alignItems: 'center' }}>
-        <Box sx={{ flex: '0 0 280px', height: 280 }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'column', md: 'row' },
+        height: { xs: 'auto', sm: 'auto', md: '260px' },
+        alignItems: { xs: 'flex-start', sm: 'flex-start', md: 'center' },
+        gap: { xs: 1.5, sm: 1.5, md: 0 },
+        overflow: 'hidden'
+      }}>
+        <Box sx={{
+          flex: { xs: '0 0 auto', sm: '0 0 auto', md: '0 0 220px' },
+          width: { xs: '100%', sm: '100%', md: '220px' },
+          height: { xs: 180, sm: 200, md: 260 },
+          minWidth: { xs: '100%', sm: '100%', md: '220px' },
+          flexShrink: 0
+        }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={100}
+                innerRadius={50}
+                outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
                 label={renderCustomizedLabel}
@@ -133,8 +146,8 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
                 strokeWidth={2}
               >
                 {chartData.map((_, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
+                  <Cell
+                    key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
                   />
                 ))}
@@ -155,37 +168,61 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
             </PieChart>
           </ResponsiveContainer>
         </Box>
-        <Box sx={{ flex: 1, ml: 3, overflow: 'auto' }}>
-          <Typography variant="subtitle2" gutterBottom fontWeight="bold" sx={{ fontSize: '13px', mb: 1.5 }}>
-            Легенда
-          </Typography>
-          {chartData.map((entry, index) => (
-            <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
-              <Box
-                sx={{
-                  width: 14,
-                  height: 14,
-                  bgcolor: COLORS[index % COLORS.length],
-                  mr: 1,
-                  flexShrink: 0,
-                  borderRadius: '3px',
-                  mt: 0.25,
-                }}
-              />
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '11px',
-                  lineHeight: 1.4,
-                  color: '#666666',
-                  wordBreak: 'break-word',
-                  whiteSpace: 'normal',
-                }}
-              >
-                {entry.fullName} ({entry.percentage}%)
-              </Typography>
-            </Box>
-          ))}
+        <Box sx={{
+          flex: { xs: '1 1 100%', sm: '1 1 100%', md: '1 1 auto' },
+          width: { xs: '100%', sm: '100%', md: 'auto' },
+          maxWidth: { md: 'calc(100% - 240px)' },
+          height: 'auto',
+          maxHeight: { md: '240px' },
+          overflow: { md: 'auto' },
+          ml: { xs: 0, sm: 0, md: 2 },
+          mt: { xs: 0, sm: 0, md: 0 },
+          pl: { xs: 0, sm: 0, md: 2 },
+          borderLeft: { md: '1px solid rgba(0,0,0,0.1)' },
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: { md: 'center' }
+        }}>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.25
+          }}>
+            {chartData.map((entry, index) => (
+              <Box key={index} sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                width: '100%'
+              }}>
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    bgcolor: COLORS[index % COLORS.length],
+                    mr: 0.75,
+                    flexShrink: 0,
+                    borderRadius: '2px',
+                    mt: 0.25,
+                  }}
+                />
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: { xs: '9px', sm: '10px', md: '10px' },
+                    lineHeight: 1.3,
+                    color: '#666666',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'normal',
+                    flex: '1 1 auto',
+                    minWidth: 0,
+                    maxWidth: 'calc(100% - 20px)',
+                  }}
+                >
+                  {entry.fullName} ({entry.percentage}%)
+                </Typography>
+              </Box>
+            ))}
+          </Box>
         </Box>
       </Box>
     </Paper>

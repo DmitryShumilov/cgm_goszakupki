@@ -27,9 +27,13 @@ ENV/
 .venv
 
 # Environment variables
+# .env - локальный файл с паролями (не коммитить)
 .env
-.env.local
-.env.*.local
+# .env.example - шаблон (коммитить)
+!.env.example
+
+# PID файл для управления процессами
+.pids.json
 
 # Excel / Database
 *.xlsx

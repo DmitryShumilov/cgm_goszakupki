@@ -4,52 +4,49 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
+from contextlib import contextmanager
 import sys
 import os
 
 # Добавляем backend в path для импорта
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app, get_db_connection, cache
+from main import app, cache
 
 
 @pytest.fixture
 def client():
     """Создаёт тестовый клиент FastAPI"""
-    with TestClient(app) as client:
-        yield client
+    # Отключаем shutdown handler для тестов
+    with patch('main.connection_pool', None):
+        with TestClient(app) as client:
+            yield client
 
 
 @pytest.fixture
-def mock_db_connection():
-    """Фикстура для мока подключения к БД"""
-    with patch('main.get_db_connection') as mock_get_db:
-        mock_conn = MagicMock()
+def mock_db_cursor():
+    """Фикстура для мока курсора БД через patch get_db_cursor"""
+    with patch('main.get_db_cursor') as mock_get_cursor:
         mock_cursor = MagicMock()
-        
-        mock_conn.cursor.return_value = mock_cursor
         mock_cursor.fetchall.return_value = []
         mock_cursor.fetchone.return_value = {}
-        mock_cursor.close.return_value = None
-        mock_conn.close.return_value = None
-        
-        mock_get_db.return_value = mock_conn
-        yield mock_conn, mock_cursor
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        mock_get_cursor.return_value = mock_cursor
+        yield mock_get_cursor, mock_cursor
 
 
 @pytest.fixture
 def mock_db_with_data():
     """Фикстура для мока БД с тестовыми данными"""
-    with patch('main.get_db_connection') as mock_get_db:
-        mock_conn = MagicMock()
+    with patch('main.get_db_cursor') as mock_get_cursor:
         mock_cursor = MagicMock()
-        
-        mock_conn.cursor.return_value = mock_cursor
-        mock_cursor.close.return_value = None
-        mock_conn.close.return_value = None
-        
-        mock_get_db.return_value = mock_conn
-        yield mock_conn, mock_cursor
+        mock_cursor.fetchall.return_value = []
+        mock_cursor.fetchone.return_value = {}
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        mock_get_cursor.return_value = mock_cursor
+        yield mock_get_cursor, mock_cursor
 
 
 @pytest.fixture
