@@ -1,0 +1,801 @@
+/* ═══════════════════════════════════════════════════════════ */
+/* ХЕДЕР                                                       */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* Skip link для навигации с клавиатуры */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent-primary);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-4);
+  z-index: var(--z-toast);
+  transition: top var(--duration-fast);
+  text-decoration: none;
+  font-weight: var(--font-medium);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.map-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000 !important;
+  padding: var(--space-4) var(--space-6);
+  background: var(--gradient-header);
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
+}
+
+.map-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1920px;
+  margin: 0 auto;
+  gap: var(--space-4);
+}
+
+.map-header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.map-header-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+.map-header-subtitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.82) !important;
+  line-height: var(--leading-normal);
+  font-weight: var(--font-normal);
+}
+
+.map-header-filters {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 1001 !important;
+}
+
+/* Панель активных фильтров */
+.active-filters-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-elevated);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: var(--space-3) var(--space-6);
+  z-index: 999;
+  animation: slideDown var(--duration-normal) var(--ease-out);
+  box-shadow: var(--shadow-md);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.active-filters-title {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: rgba(255, 255, 255, 0.82) !important;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-2);
+}
+
+.active-filters-chips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.active-filter-chip {
+  background: rgba(51, 136, 255, 0.2) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(51, 136, 255, 0.3) !important;
+  height: 28px !important;
+  font-size: 12px !important;
+}
+
+.active-filter-chip .MuiChip-deleteIcon {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.active-filter-chip .MuiChip-deleteIcon:hover {
+  color: #ffffff !important;
+}
+
+.map-header-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.map-header-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.map-container-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-base);
+}
+
+/* Стили для карты - в стиле основного дашборда */
+
+.map-wrapper {
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  overflow: hidden;
+}
+
+.map-container {
+  height: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1;
+}
+
+/* КРИТИЧЕСКИ ВАЖНО: Делаем карту видимой */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  background: rgba(30, 30, 50, 0.8) !important;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  outline: none;
+  z-index: 0 !important;
+}
+
+.leaflet-map-pane {
+  z-index: 10 !important;
+}
+
+.leaflet-tile-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 400 !important;
+}
+
+/* SVG пути регионов - делаем видимыми */
+.leaflet-overlay-pane svg {
+  z-index: 400 !important;
+}
+
+/* Пути регионов - критически важные стили для видимости */
+path.leaflet-interactive {
+  stroke: #ffffff !important;
+  stroke-width: 1.5px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  fill-opacity: 0.5 !important;
+  vector-effect: non-scaling-stroke !important;
+  outline: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* FOCUS СОСТОЯНИЯ (WCAG 2.1 AA - видимый фокус)              */
+/* ═══════════════════════════════════════════════════════════ */
+
+/* Глобальные focus стили */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Кнопка закрытия панели региона */
+.close-btn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* Кнопки зума карты */
+.leaflet-control-zoom-in:focus-visible,
+.leaflet-control-zoom-out:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* Регионы карты */
+path.leaflet-interactive:focus-visible {
+  stroke: var(--accent-primary);
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px rgba(51, 136, 255, 0.6));
+}
+
+/* Убираем рамку фокуса при клике (но оставляем для клавиатуры) */
+path.leaflet-interactive:focus:not(:focus-visible),
+path.leaflet-interactive:focus-visible:focus {
+  outline: none;
+}
+
+/* MUI Autocomplete focus */
+.MuiOutlinedInput-root:focus-visible {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--border-focus);
+}
+
+/* MUI Button focus */
+.MuiButtonBase-root:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* MUI Chip focus */
+.MuiChip-focusVisible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Кнопка сброса фильтров */
+.MuiIconButton-root:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+/* Счётчик регионов (badge) */
+.region-count-badge:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Стили для регионов */
+.region-path {
+  fill: rgba(51, 136, 255, 0.5);
+  stroke: #ffffff;
+  stroke-width: 1;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.region-path:hover {
+  fill: rgba(51, 136, 255, 0.8);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px rgba(51, 136, 255, 0.6));
+}
+
+.region-path.selected {
+  fill: rgba(255, 152, 0, 0.7);
+  stroke: #ff9800;
+  stroke-width: 2;
+}
+
+.region-path.no-data {
+  fill: rgba(100, 100, 100, 0.3);
+  stroke: rgba(150, 150, 150, 0.5);
+}
+
+/* Легенда карты */
+.map-legend {
+  position: absolute;
+  bottom: 30px;
+  right: 20px;
+  background: rgba(51, 136, 255, 0.2);
+  backdrop-filter: blur(20px);
+  padding: var(--space-4) var(--space-5);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-popover);
+  color: #ffffff !important;
+  min-width: 200px;
+  border: 1px solid rgba(51, 136, 255, 0.3);
+  pointer-events: none;
+}
+
+.map-legend * {
+  color: #ffffff !important;
+}
+
+.map-legend h4 {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.legend-gradient {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.legend-color {
+  width: 24px;
+  height: 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+}
+
+.legend-separator {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Панель информации о регионе */
+.region-info-panel {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 400px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-modal);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff !important;
+  animation: slideInRight var(--duration-slow) var(--ease-out);
+}
+
+.region-info-panel * {
+  color: #ffffff !important;
+}
+
+.region-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.region-info-header h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--text-secondary);
+  width: var(--height-icon-btn);
+  height: var(--height-icon-btn);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--ease-out);
+  font-size: 20px;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+.region-info-content {
+  padding: var(--space-6);
+  padding-top: var(--space-5);
+}
+
+/* KPI карточки региона */
+.region-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  margin-top: var(--space-4);
+}
+
+.kpi-card {
+  background: rgba(255, 255, 255, 0.02);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all var(--duration-normal) var(--ease-out);
+  animation: fadeInUp var(--duration-normal) var(--ease-out) backwards;
+}
+
+.kpi-card:nth-child(1) { animation-delay: 50ms; }
+.kpi-card:nth-child(2) { animation-delay: 100ms; }
+.kpi-card:nth-child(3) { animation-delay: 150ms; }
+.kpi-card:nth-child(4) { animation-delay: 200ms; }
+
+.kpi-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.kpi-label {
+  display: block;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.65) !important;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-2);
+  line-height: var(--leading-none);
+}
+
+.kpi-value {
+  display: block;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: #ffffff !important;
+  word-break: break-word;
+  line-height: var(--leading-none);
+}
+
+.kpi-value.highlight {
+  color: #4fc3f7;
+  text-shadow: 0 0 20px rgba(79, 195, 247, 0.3);
+}
+
+.kpi-info {
+  vertical-align: middle;
+  margin-left: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.kpi-info:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.skeleton-text {
+  height: 16px;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.skeleton-label {
+  width: 60%;
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.skeleton-value {
+  width: 80%;
+  height: 24px;
+}
+
+/* Секции информации */
+.info-section {
+  margin-bottom: var(--space-5);
+}
+
+.info-section-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: rgba(255, 255, 255, 0.82) !important;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.info-section-content {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+/* Заглушка детализации */
+.info-section-placeholder {
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.info-section-placeholder-title {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.info-section-placeholder-subtitle {
+  margin: var(--space-2) 0 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Загрузка */
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--text-secondary);
+  z-index: var(--z-toast);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(20px);
+  padding: var(--space-10);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+}
+
+.map-loading-error {
+  color: var(--accent-error);
+}
+
+.map-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #3388ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Скроллбар */
+.region-info-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.region-info-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+}
+
+.region-info-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.region-info-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Тултип */
+.leaflet-tooltip {
+  background: var(--bg-elevated);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: #ffffff !important;
+  font-family: var(--font-primary);
+  font-size: var(--text-xs);
+  box-shadow: var(--shadow-md);
+  z-index: var(--z-tooltip);
+}
+
+.leaflet-tooltip * {
+  color: #ffffff !important;
+}
+
+.leaflet-tooltip b {
+  color: var(--accent-secondary) !important;
+  font-weight: var(--font-semibold);
+}
+
+/* Leaflet control zoom */
+.leaflet-control-zoom {
+  z-index: var(--z-popover) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+  font-weight: var(--font-bold) !important;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background: var(--accent-primary-light) !important;
+}
+
+.leaflet-bar {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Кастомный зум контроль */
+.leaflet-control-custom-zoom {
+  position: absolute !important;
+  bottom: var(--space-8) !important;
+  left: var(--space-5) !important;
+  z-index: var(--z-popover) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+}
+
+.leaflet-control-custom-zoom button {
+  width: 30px;
+  height: 30px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: none;
+  border-bottom: 1px solid var(--border-default);
+  font-size: 20px;
+  font-weight: var(--font-bold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.leaflet-control-custom-zoom button:last-child {
+  border-bottom: none;
+}
+
+.leaflet-control-custom-zoom button:hover {
+  background: var(--accent-primary-light);
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* АНИМАЦИИ                                                    */
+/* ═══════════════════════════════════════════════════════════ */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced motion для пользователей с предпочтением уменьшенного движения */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .region-info-panel {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    max-height: 60vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .region-info-header {
+    border-radius: 16px 16px 0 0;
+  }
+
+  .map-legend {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    min-width: auto;
+  }
+}

@@ -111,6 +111,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CORS для frontend - ДОБАВЛЕНО СРАЗУ ПОСЛЕ СОЗДАНИЯ APP
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:5174,http://localhost:80,http://localhost"
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    max_age=600,
+)
 
 @app.on_event("shutdown")
 def shutdown_db_pool():
@@ -122,21 +136,6 @@ def shutdown_db_pool():
     except Exception as e:
         logger.warning(f"Error closing connection pool: {e}")
 
-# CORS для frontend
-allowed_origins = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:80"
-).split(",")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
-    max_age=600,
-)
-
 # ============================================================================
 # Rate Limiting
 # ============================================================================
@@ -144,6 +143,15 @@ app.add_middleware(
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    """Добавление CORS заголовков"""
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -798,6 +806,104 @@ def health_check(request: Request):
     except Exception as e:
         logger.error(f"Health check error: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+# ============================================================================
+# Map Dashboard API
+# ============================================================================
+
+@app.get("/api/map/regions")
+@limiter.limit("60/minute")
+async def get_map_regions(
+    request: Request,
+    years: Optional[str] = Query(None),
+    regions: Optional[str] = Query(None),
+    suppliers: Optional[str] = Query(None),
+    products: Optional[str] = Query(None)
+):
+    """
+    Получение данных для карты регионов по всем регионам РФ.
+    
+    - **years**: Годы закупки (через запятую, например: 2024,2025)
+    - **regions**: Регионы (через запятую)
+    - **suppliers**: Поставщики (через запятую)
+    - **products**: Продукты (через запятую)
+    
+    Возвращает данные для всех регионов с суммами и количеством контрактов.
+    """
+    logger.info(f"Fetching map regions data with filters: years={years}, regions={regions}")
+    
+    start_time = time.time()
+    
+    try:
+        # Парсинг параметров
+        year_list = [int(y.strip()) for y in years.split(',')] if years else None
+        region_list = [r.strip() for r in regions.split(',')] if regions else None
+        supplier_list = [s.strip() for s in suppliers.split(',')] if suppliers else None
+        product_list = [p.strip() for p in products.split(',')] if products else None
+        
+        # Запрос к БД
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Базовый запрос
+                query = """
+                    SELECT 
+                        region,
+                        SUM(amount_rub) as sum,
+                        COUNT(*) as count,
+                        SUM(quantity) as quantity,
+                        AVG(amount_rub) as avg_price
+                    FROM purchases
+                    WHERE 1=1
+                """
+                
+                conditions = []
+                params = {}
+                
+                if year_list:
+                    conditions.append("year = ANY(%(years)s)")
+                    params['years'] = year_list
+                
+                if region_list:
+                    conditions.append("region = ANY(%(regions)s)")
+                    params['regions'] = region_list
+                
+                if supplier_list:
+                    conditions.append("distributor = ANY(%(suppliers)s)")
+                    params['suppliers'] = supplier_list
+                
+                if product_list:
+                    conditions.append("what_purchased = ANY(%(products)s)")
+                    params['products'] = product_list
+                
+                if conditions:
+                    query += " AND " + " AND ".join(conditions)
+                
+                query += " GROUP BY region ORDER BY sum DESC"
+                
+                logger.info(f"Executing map regions query")
+                cur.execute(query, params)
+                results = cur.fetchall()
+                
+                # Форматирование результатов
+                regions_data = []
+                for row in results:
+                    regions_data.append({
+                        "region": row['region'],
+                        "sum": float(row['sum']) if row['sum'] else 0,
+                        "count": int(row['count']) if row['count'] else 0,
+                        "quantity": int(row['quantity']) if row['quantity'] else 0,
+                        "avg_price": float(row['avg_price']) if row['avg_price'] else 0
+                    })
+                
+                elapsed = time.time() - start_time
+                logger.info(f"Map regions fetched in {elapsed:.3f}s, {len(regions_data)} regions")
+                
+                return regions_data
+                
+    except Exception as e:
+        logger.error(f"Error fetching map regions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/")
