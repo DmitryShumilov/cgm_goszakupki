@@ -125,8 +125,8 @@ export const KpiPanel = ({ data, loading = false }: KpiPanelProps) => {
   // Градиенты для каждой карточки (как в образце)
   const gradients = [
     'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',  // Сумма - синий
-    'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)',  // Контракты - зелёный
     'linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%)',  // Ср.сумма - фиолетовый
+    'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)',  // Контракты - зелёный
     'linear-gradient(135deg, #007991 0%, #78FFD5 100%)',  // Объём - бирюзовый
     'linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%)',  // Ср.цена - красно-оранжевый
     'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',  // Заказчики - голубой
@@ -138,12 +138,12 @@ export const KpiPanel = ({ data, loading = false }: KpiPanelProps) => {
       value: data ? formatCurrency(data.total_amount) : '—',
     },
     {
-      title: 'Количество контрактов',
-      value: data ? data.contract_count.toLocaleString('ru-RU') : '—',
-    },
-    {
       title: 'Средняя сумма контракта',
       value: data ? formatCurrency(data.avg_contract_amount) : '—',
+    },
+    {
+      title: 'Количество контрактов',
+      value: data ? data.contract_count.toLocaleString('ru-RU') : '—',
     },
     {
       title: 'Общий объём (шт)',

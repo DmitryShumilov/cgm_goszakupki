@@ -51,9 +51,7 @@
 ### Зоны роста
 
 - ⚠️ Отсутствуют backend тесты (0% coverage)
-- ⚠️ Критическая ошибка: `logger` используется до объявления
-- ⚠️ Frontend_map не подключён к backend (mock данные)
-- ⚠️ Неиспользуемый Redis в docker-compose
+- ⚠️ Отсутствуют E2E тесты
 
 ### Улучшения frontend_map (Март 2026)
 
@@ -87,9 +85,30 @@
 6. ✅ Республики — 6 несоответствий в названиях
 7. ✅ KPI не обновлялись — добавлен useEffect
 
-📄 **Подробно:** [frontend_map/README.md](frontend_map/README.md)  
-📄 **Интеграция:** [frontend_map/docs/INTEGRATION_COMPLETE.md](frontend_map/docs/INTEGRATION_COMPLETE.md)  
+📄 **Подробно:** [frontend_map/README.md](frontend_map/README.md)
+📄 **Интеграция:** [frontend_map/docs/INTEGRATION_COMPLETE.md](frontend_map/docs/INTEGRATION_COMPLETE.md)
 📄 **Changelog:** [frontend_map/CHANGELOG.md](frontend_map/CHANGELOG.md)
+
+### Последние улучшения (15 марта 2026)
+
+**Версия:** 1.3.3
+
+**frontend_map:**
+- ✅ InfoSection #1: Топ поставщиков региона (список с рангами и сокращениями)
+- ✅ InfoSection #2: Горизонтальная столбчатая диаграмма категорий
+- ✅ Легенда карты перемещена в левый нижний угол
+- ✅ Сокращение названий поставщиков (ООО, АО, ПАО и т.д.)
+
+**Основной дашборд:**
+- ✅ Поменяны местами KPI карточки: "Средняя сумма контракта" (2-я) и "Количество контрактов" (3-я)
+- ✅ Сокращение названий поставщиков в диаграмме и фильтрах
+
+**Backend:**
+- ✅ `backend/organization_forms.py` — 100+ организационно-правовых форм
+- ✅ `backend/utils.py` — функции сокращения с кэшированием
+- ✅ Обновлены 3 API endpoint для поставщиков
+
+📄 **Подробно:** [docs/MARCH_2026_UPDATES.md](docs/MARCH_2026_UPDATES.md)
 
 ### Прогноз масштабирования
 
@@ -127,21 +146,38 @@
 
 ## 🔗 Интеграция frontend_map с backend
 
-**Статус:** ✅ Готово к интеграции
+**Статус:** ✅ Полная интеграция завершена (Март 2026)
 
-### Быстрая интеграция (15 минут)
+### API Endpoints
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/map/regions` | GET | Данные для карты всех регионов |
+| `/api/map/regions/{region}/suppliers` | GET | Топ поставщиков региона |
+| `/api/map/regions/{region}/categories` | GET | Категории продуктов региона |
+| `/api/filters/years` | GET | Список доступных лет |
+| `/api/filters/regions` | GET | Список регионов |
+| `/api/filters/suppliers` | GET | Список поставщиков (сокращённые названия) |
+| `/api/filters/products` | GET | Список продуктов |
+
+### Пример запроса
 
 ```bash
-# 1. Backend (добавить endpoint)
-# См. frontend_map/docs/QUICK_INTEGRATION.md
-
-# 2. Frontend (обновить API client)
-cd frontend_map
-echo VITE_API_URL=http://localhost:8000 > .env
-npm run dev
+curl http://localhost:8000/api/map/regions/Москва/suppliers?limit=5
 ```
 
-📄 **Полная инструкция:** [frontend_map/docs/INTEGRATION_PLAN.md](frontend_map/docs/INTEGRATION_PLAN.md)  
+**Ответ:**
+```json
+[
+  {
+    "distributor": "ООО \"Фармстандарт\"",
+    "amount": 927012400.0,
+    "contracts_count": 9
+  }
+]
+```
+
+📄 **Полная инструкция:** [frontend_map/docs/INTEGRATION_COMPLETE.md](frontend_map/docs/INTEGRATION_COMPLETE.md)
 ⚡ **Быстрая инструкция:** [frontend_map/docs/QUICK_INTEGRATION.md](frontend_map/docs/QUICK_INTEGRATION.md)
 
 ---

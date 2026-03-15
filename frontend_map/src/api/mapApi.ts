@@ -9,6 +9,18 @@ export interface RegionData {
   avg_price: number;
 }
 
+export interface SupplierData {
+  distributor: string;
+  amount: number;
+  contracts_count: number;
+}
+
+export interface CategoryData {
+  what_purchased: string;
+  amount: number;
+  contracts_count: number;
+}
+
 export interface FilterParams {
   years?: number[];
   regions?: string[];
@@ -91,6 +103,58 @@ export const mapApi = {
       return response.data;
     } catch (error) {
       console.error('Error fetching products:', error);
+      throw error;
+    }
+  },
+
+  // Топ поставщиков региона
+  getRegionSuppliers: async (
+    region: string,
+    params?: { years?: number[]; limit?: number }
+  ): Promise<SupplierData[]> => {
+    try {
+      const formattedParams: Record<string, string> = {};
+      
+      if (params?.years && params.years.length > 0) {
+        formattedParams.years = params.years.join(',');
+      }
+      if (params?.limit) {
+        formattedParams.limit = params.limit.toString();
+      }
+      
+      const response = await apiClient.get<SupplierData[]>(
+        `/api/map/regions/${encodeURIComponent(region)}/suppliers`,
+        { params: formattedParams }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching region suppliers:', error);
+      throw error;
+    }
+  },
+
+  // Категории продуктов региона
+  getRegionCategories: async (
+    region: string,
+    params?: { years?: number[]; limit?: number }
+  ): Promise<CategoryData[]> => {
+    try {
+      const formattedParams: Record<string, string> = {};
+      
+      if (params?.years && params.years.length > 0) {
+        formattedParams.years = params.years.join(',');
+      }
+      if (params?.limit) {
+        formattedParams.limit = params.limit.toString();
+      }
+      
+      const response = await apiClient.get<CategoryData[]>(
+        `/api/map/regions/${encodeURIComponent(region)}/categories`,
+        { params: formattedParams }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching region categories:', error);
       throw error;
     }
   },

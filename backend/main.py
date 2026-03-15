@@ -33,6 +33,9 @@ import sys
 from dotenv import load_dotenv
 from contextlib import contextmanager
 
+# Утилиты
+from utils import shorten_organization_name_cached
+
 # Rate Limiting
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -578,7 +581,7 @@ def get_suppliers(request: Request, filters: Annotated[Optional[FilterParams], B
 
     return {
         "top5": {
-            "labels": [r['distributor'] for r in results],
+            "labels": [shorten_organization_name_cached(r['distributor']) for r in results],
             "amounts": [float(r['amount']) for r in results]
         },
         "others": others,
@@ -776,7 +779,7 @@ def get_suppliers_list():
     """Доступные поставщики"""
     with get_db_cursor() as cur:
         cur.execute("SELECT DISTINCT distributor FROM purchases ORDER BY distributor")
-        suppliers = [row['distributor'] for row in cur.fetchall()]
+        suppliers = [shorten_organization_name_cached(row['distributor']) for row in cur.fetchall()]
     return suppliers
 
 
@@ -900,9 +903,147 @@ async def get_map_regions(
                 logger.info(f"Map regions fetched in {elapsed:.3f}s, {len(regions_data)} regions")
                 
                 return regions_data
-                
+
     except Exception as e:
         logger.error(f"Error fetching map regions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Map Region Detail API
+# ============================================================================
+
+@app.get("/api/map/regions/{region}/suppliers")
+@limiter.limit("60/minute")
+async def get_region_suppliers(
+    request: Request,
+    region: str,
+    years: Optional[str] = Query(None),
+    limit: int = Query(5, description="Топ-N поставщиков")
+):
+    """
+    Топ поставщиков выбранного региона.
+    
+    - **region**: Название региона
+    - **years**: Годы закупки (через запятую)
+    - **limit**: Количество поставщиков (по умолчанию 5)
+    """
+    logger.info(f"Fetching suppliers for region: {region}, years: {years}")
+    
+    start_time = time.time()
+    
+    try:
+        # Парсинг параметров
+        year_list = [int(y.strip()) for y in years.split(',')] if years else None
+        
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                query = """
+                    SELECT
+                        distributor,
+                        SUM(amount_rub) as amount,
+                        COUNT(*) as contracts_count
+                    FROM purchases
+                    WHERE region = %(region)s
+                """
+                params = {'region': region, 'limit': limit}
+                
+                if year_list:
+                    query += " AND year = ANY(%(years)s)"
+                    params['years'] = year_list
+                
+                query += """
+                    GROUP BY distributor
+                    ORDER BY amount DESC
+                    LIMIT %(limit)s
+                """
+                
+                cur.execute(query, params)
+                results = cur.fetchall()
+
+                suppliers_data = [
+                    {
+                        'distributor': shorten_organization_name_cached(r['distributor']),
+                        'amount': float(r['amount']) if r['amount'] else 0,
+                        'contracts_count': int(r['contracts_count']) if r['contracts_count'] else 0
+                    }
+                    for r in results
+                ]
+
+                elapsed = time.time() - start_time
+                logger.info(f"Region suppliers fetched in {elapsed:.3f}s, {len(suppliers_data)} suppliers")
+
+                return suppliers_data
+                
+    except Exception as e:
+        logger.error(f"Error fetching region suppliers: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/map/regions/{region}/categories")
+@limiter.limit("60/minute")
+async def get_region_categories(
+    request: Request,
+    region: str,
+    years: Optional[str] = Query(None),
+    limit: int = Query(7, description="Топ-N категорий")
+):
+    """
+    Категории продуктов выбранного региона.
+    
+    - **region**: Название региона
+    - **years**: Годы закупки (через запятую)
+    - **limit**: Количество категорий (по умолчанию 7)
+    """
+    logger.info(f"Fetching categories for region: {region}, years: {years}")
+    
+    start_time = time.time()
+    
+    try:
+        # Парсинг параметров
+        year_list = [int(y.strip()) for y in years.split(',')] if years else None
+        
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                query = """
+                    SELECT
+                        what_purchased,
+                        SUM(amount_rub) as amount,
+                        COUNT(*) as contracts_count
+                    FROM purchases
+                    WHERE region = %(region)s
+                """
+                params = {'region': region, 'limit': limit}
+                
+                if year_list:
+                    query += " AND year = ANY(%(years)s)"
+                    params['years'] = year_list
+                
+                query += """
+                    GROUP BY what_purchased
+                    ORDER BY amount DESC
+                    LIMIT %(limit)s
+                """
+                
+                cur.execute(query, params)
+                results = cur.fetchall()
+                
+                categories_data = [
+                    {
+                        'what_purchased': r['what_purchased'],
+                        'amount': float(r['amount']) if r['amount'] else 0,
+                        'contracts_count': int(r['contracts_count']) if r['contracts_count'] else 0
+                    }
+                    for r in results
+                ]
+                
+                elapsed = time.time() - start_time
+                logger.info(f"Region categories fetched in {elapsed:.3f}s, {len(categories_data)} categories")
+                
+                return categories_data
+                
+    except Exception as e:
+        logger.error(f"Error fetching region categories: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
