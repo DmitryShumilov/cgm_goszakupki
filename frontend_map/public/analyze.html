@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GeoJSON Analysis</title>
+</head>
+<body>
+<script>
+async function analyze() {
+  const files = ['russia_regions.geojson', 'simple_map.geojson'];
+  
+  for (const file of files) {
+    try {
+      const response = await fetch('/public/' + file);
+      const json = await response.json();
+      
+      const div = document.createElement('div');
+      div.style.marginBottom = '20px';
+      div.style.fontFamily = 'monospace';
+      
+      div.innerHTML = `
+        <h3>${file}</h3>
+        <p>Features count: ${json.features.length}</p>
+        <p>First region name: ${json.features[0]?.properties?.name || 'N/A'}</p>
+        <p>Properties: ${Object.keys(json.features[0]?.properties || {}).join(', ')}</p>
+      `;
+      
+      document.body.appendChild(div);
+    } catch (e) {
+      document.body.innerHTML += `<div>Error loading ${file}: ${e.message}</div>`;
+    }
+  }
+}
+analyze();
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+/* ═══════════════════════════════════════════════════════════ */
+/* Импорт CSS переменных                                       */
+/* ═══════════════════════════════════════════════════════════ */
+@import './styles/variables.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: var(--font-primary);
+  line-height: var(--leading-normal);
+  font-weight: var(--font-normal);
+
+  color-scheme: dark;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  display: block;
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Leaflet переопределения */
+.leaflet-container {
+  background: rgba(30, 30, 50, 0.8) !important;
+  outline: none;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background: rgba(15, 12, 41, 0.9) !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  font-weight: bold !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background: rgba(51, 136, 255, 0.3) !important;
+}
+
+.leaflet-bar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* SVG стили для GeoJSON путей */
+.leaflet-overlay-pane svg,
+.leaflet-overlay-pane svg g {
+  pointer-events: all;
+}
+
+.leaflet-interactive {
+  vector-effect: non-scaling-stroke !important;
+  fill: rgba(51, 136, 255, 0.4) !important;
+  fill-opacity: 0.5 !important;
+  stroke: #ffffff !important;
+  stroke-width: 1.5px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.leaflet-interactive:hover {
+  fill: rgba(51, 136, 255, 0.7) !important;
+  filter: drop-shadow(0 0 8px rgba(51, 136, 255, 0.6)) !important;
+}
+
+/* Убедимся, что карта видима */
+.leaflet-map-pane {
+  z-index: 10 !important;
+}
+
+.leaflet-tile-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 300 !important;
+}
+
+.leaflet-shadow-pane {
+  z-index: 200 !important;
+}
+
+.leaflet-marker-pane {
+  z-index: 400 !important;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 500 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 600 !important;
+}

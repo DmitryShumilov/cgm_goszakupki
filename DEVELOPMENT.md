@@ -13,6 +13,7 @@
 5. [Тестирование](#тестирование)
 6. [Деплой](#деплой)
 7. [Мониторинг и логи](#мониторинг-и-логи)
+8. [Карта регионов](#карта-регионов)
 
 ---
 
@@ -23,7 +24,8 @@
 | Компонент | Технология | Версия |
 |-----------|------------|--------|
 | Backend | Python + FastAPI | 3.14+ / 0.135+ |
-| Frontend | React + TypeScript | 19+ / 5.9+ |
+| Frontend (Dashboard) | React + TypeScript | 19+ / 5.9+ |
+| Frontend (Map) | React + Leaflet | 19+ / 1.9+ |
 | Database | PostgreSQL | 17+ |
 | UI Library | Material-UI | 7+ |
 | Charts | Recharts | 3.7+ |
@@ -520,6 +522,265 @@ cd frontend
 npm audit
 npm audit fix
 ```
+
+---
+
+## 🗺️ Карта регионов
+
+### frontend_map (порт 5174)
+
+**Документация:** [docs/MAP_DASHBOARD.md](docs/MAP_DASHBOARD.md)
+
+### Структура
+
+```
+frontend_map/
+├── src/
+│   ├── components/
+│   │   ├── Map/          # Карта Leaflet
+│   │   ├── MapLegend/    # Легенда
+│   │   └── RegionDetail/ # Панель региона
+│   ├── stores/           # Zustand store
+│   ├── utils/            # regionMapping.ts
+│   └── api/              # mapApi.ts
+├── public/
+│   └── russia_regions.geojson
+└── ...
+```
+
+### Ключевые файлы
+
+| Файл | Назначение |
+|------|------------|
+| `Map.tsx` | Компонент карты с обработкой событий |
+| `regionMapping.ts` | Маппинг названий GeoJSON ↔ БД |
+| `mapApi.ts` | Mock данные (будущий API client) |
+| `mapStore.ts` | Zustand store для состояния |
+
+### Важные особенности
+
+#### 1. Нормализация координат
+
+Для Чукотского АО (пересекает 180-й меридиан):
+```typescript
+function normalizeCoordinates(geojson: any) {
+  // Сдвиг отрицательных долгот на +360
+}
+```
+
+#### 2. Маппинг регионов
+
+```typescript
+// regionMapping.ts
+'Ханты-Мансийский автономный округ — Югра': 'Ханты-Мансийский автономный округ - Югра'
+```
+
+#### 3. Актуальное состояние
+
+```typescript
+const selectedRegionRef = useRef(selectedRegion);
+```
+
+### Запуск
+
+```bash
+cd frontend_map
+npm install
+npm run dev
+```
+
+**Адрес:** http://localhost:5174
+
+### Будущие улучшения
+
+- [ ] Подключение к backend API
+- [ ] Детализация по региону (топ поставщиков, категорий)
+- [ ] Фильтры по годам/месяцам
+- [ ] Экспорт данных
+
+---
+
+## 🏛 Архитектурные рекомендации (Март 2026)
+
+### Текущее состояние (13 марта 2026)
+
+**Оценка проекта:** 92.15/100 ✅  
+**Статус:** Production Ready
+
+### Приоритетные задачи для разработчиков
+
+#### P0: Критические исправления (5 мин)
+
+**Исправить `logger` до объявления**
+
+Файл: `backend/main.py`
+
+```python
+# ❌ НЕПРАВИЛЬНО:
+@app.on_event("shutdown")
+def shutdown_db_pool():
+    logger.info("Database connection pool closed")  # logger ещё не определён
+
+# ✅ ПРАВИЛЬНО:
+# Переместить logging.basicConfig() выше @app.on_event
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('logs/app.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+@app.on_event("shutdown")
+def shutdown_db_pool():
+    logger.info("Database connection pool closed")
+```
+
+#### P1: Создание тестов (5 часов)
+
+**Backend тесты (2 часа):**
+
+Структура:
+```
+backend/tests/
+├── conftest.py          ✅ (существует)
+├── test_kpi.py          ⏳ Создать
+├── test_charts.py       ⏳ Создать
+├── test_filters.py      ⏳ Создать
+└── test_validation.py   ⏳ Создать
+```
+
+Пример теста (`test_kpi.py`):
+```python
+def test_kpi_no_filters(client):
+    """Тест KPI без фильтров"""
+    response = client.get("/api/kpi")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_amount" in data
+    assert "count" in data
+    assert "avg_price" in data
+
+def test_kpi_with_year_filter(client):
+    """Тест KPI с фильтром по годам"""
+    response = client.get("/api/kpi?years=2024,2025")
+    assert response.status_code == 200
+```
+
+**E2E тесты (3 часа):**
+
+Структура:
+```
+frontend/tests/e2e/
+├── dashboard.spec.ts    ⏳ Создать (10 сценариев)
+├── mobile.spec.ts       ⏳ Создать (5 сценариев)
+└── filters.spec.ts      ⏳ Создать (4 сценария)
+```
+
+Пример теста (`dashboard.spec.ts`):
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('загрузка KPI карточек', async ({ page }) => {
+  await page.goto('http://localhost:5173');
+  await expect(page.locator('[data-testid="kpi-total"]')).toBeVisible();
+  await expect(page.locator('[data-testid="kpi-count"]')).toBeVisible();
+});
+
+test('загрузка диаграмм', async ({ page }) => {
+  await page.goto('http://localhost:5173');
+  await expect(page.locator('[data-testid="chart-dynamics"]')).toBeVisible();
+});
+```
+
+#### P1: Подключение frontend_map к backend (1 час)
+
+**Шаг 1: Создать endpoint в backend**
+
+Файл: `backend/main.py`
+
+```python
+@app.get("/api/map/regions")
+@limiter.limit("60/minute")
+async def get_map_regions(
+    request: Request,
+    years: Optional[str] = None,
+    regions: Optional[str] = None,
+    suppliers: Optional[str] = None,
+    products: Optional[str] = None
+):
+    """Получение данных для карты регионов"""
+    logger.info("Fetching map regions data")
+    
+    # Парсинг параметров
+    year_list = [int(y) for y in years.split(',')] if years else None
+    region_list = regions.split(',') if regions else None
+    
+    # Запрос к БД
+    regions_data = await fetch_regions_data(year_list, region_list)
+    
+    return regions_data
+```
+
+**Шаг 2: Обновить frontend_map API client**
+
+Файл: `frontend_map/src/api/mapApi.ts`
+
+```typescript
+export const mapApi = {
+  getRegions: async (params?: FilterParams): Promise<RegionData[]> => {
+    // ✅ Запрос к реальному API
+    const response = await apiClient.get<RegionData[]>('/map/regions', { params });
+    return response.data;
+    
+    // ❌ Удалить mock данные
+  },
+};
+```
+
+### Рекомендуемая рефакторинг структура backend (P3)
+
+**Текущая проблема:** 817 строк в `main.py`
+
+**Рекомендуемая структура:**
+```
+backend/
+├── main.py              # Точка входа (~100 строк)
+├── api/
+│   ├── __init__.py
+│   ├── kpi.py           # KPI endpoints
+│   ├── charts.py        # Charts endpoints
+│   ├── filters.py       # Filters endpoints
+│   └── map.py           # Map endpoints
+├── models/
+│   ├── __init__.py
+│   └── schemas.py       # Pydantic модели
+├── services/
+│   ├── __init__.py
+│   ├── database.py      # DB connection pool
+│   └── cache.py         # Кэширование
+├── utils/
+│   ├── __init__.py
+│   └── validators.py    # Валидаторы
+└── tests/
+    ├── __init__.py
+    ├── conftest.py
+    ├── test_kpi.py
+    └── ...
+```
+
+### Метрики качества
+
+| Метрика | Текущее | Цель | Статус |
+|---------|---------|------|--------|
+| Backend coverage | 0% | 60%+ | ❌ |
+| Frontend coverage | 38% | 50%+ | ⚠️ |
+| E2E сценарии | 0 | 10+ | ❌ |
+| Время ответа API | <300ms | <300ms | ✅ |
+| Время запросов БД | <1ms | <10ms | ✅ |
 
 ---
 
