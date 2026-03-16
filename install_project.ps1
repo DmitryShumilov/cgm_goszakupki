@@ -124,6 +124,28 @@ function Test-Npm {
     }
 }
 
+function Test-Pip-Package {
+    param([string]$PackageName)
+    # Проверка установленного пакета через exit code
+    pip show $PackageName >$null 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        return $true
+    }
+    return $false
+}
+
+function Get-Pip-Package-Version {
+    param([string]$PackageName)
+    $result = pip show $PackageName 2>&1
+    if ($result -like "*Version:*") {
+        $versionLine = $result | Select-String "Version:"
+        if ($versionLine) {
+            return ($versionLine -split ":")[1].Trim()
+        }
+    }
+    return "unknown"
+}
+
 function Install-Pip-Packages {
     param(
         [string]$RequirementsFile,
@@ -260,8 +282,16 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_password_here
 POSTGRES_DATABASE=cgm_dashboard
 
+# Excel File Path (optional)
+EXCEL_FILE_PATH=database.xlsx
+
 # CORS Configuration
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:80
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:80,http://localhost
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
 
 # Backend Port
 BACKEND_PORT=8000
@@ -299,11 +329,11 @@ if ($installBackend) {
     
     if (Test-Path $backendReq) {
         Write-Success "requirements.txt найден"
-        
+
         # Проверка текущих установленных пакетов
         if (!$Force) {
-            $fastapiInstalled = pip show fastapi 2>&1
-            if ($fastapiInstalled -like "*fastapi*") {
+            $fastapiInstalled = Test-Pip-Package -PackageName "fastapi"
+            if ($fastapiInstalled) {
                 Write-Info "Backend зависимости уже установлены"
                 Write-Info "Для переустановки используйте -Force"
                 $reinstall = Read-Host "Переустановить зависимости? [y/N]"
@@ -312,22 +342,21 @@ if ($installBackend) {
                 }
             }
         }
-        
+
         # Установка
         Write-Info "Установка Python зависимостей..."
         $installResult = Install-Pip-Packages -RequirementsFile $backendReq -Upgrade:$Force
-        
+
         if ($installResult) {
             Write-Success "Backend зависимости установлены"
             $InstallStatus.Backend = "INSTALLED"
-            
+
             # Проверка ключевых пакетов
             Write-Info "Проверка установленных пакетов:"
             $keyPackages = @("fastapi", "uvicorn", "psycopg2-binary", "pydantic", "slowapi")
             foreach ($pkg in $keyPackages) {
-                $pkgInfo = pip show $pkg 2>&1
-                if ($pkgInfo -like "*$pkg*") {
-                    $version = ($pkgInfo | Select-String "Version:" | ForEach-Object { ($_ -split ":", 2)[1].Trim() })
+                if (Test-Pip-Package -PackageName $pkg) {
+                    $version = Get-Pip-Package-Version -PackageName $pkg
                     Write-Success "$pkg v$version"
                 }
             }

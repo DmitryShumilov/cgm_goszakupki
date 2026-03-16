@@ -1,0 +1,168 @@
+{
+  "cors_config": {
+    "pass": false,
+    "tests": [
+      {
+        "origin": "http://localhost:5173",
+        "status_code": 200,
+        "allow_origin": "*",
+        "allow_methods": "*",
+        "allow_headers": "*",
+        "pass": "*"
+      },
+      {
+        "origin": "http://localhost:5174",
+        "status_code": 200,
+        "allow_origin": "*",
+        "allow_methods": "*",
+        "allow_headers": "*",
+        "pass": "*"
+      },
+      {
+        "origin": "http://localhost:80",
+        "status_code": 200,
+        "allow_origin": "*",
+        "allow_methods": "*",
+        "allow_headers": "*",
+        "pass": "*"
+      },
+      {
+        "origin": "http://localhost",
+        "status_code": 400,
+        "allow_origin": "*",
+        "allow_methods": "*",
+        "allow_headers": "*",
+        "pass": false
+      }
+    ]
+  },
+  "cors_headers": {
+    "pass": true,
+    "endpoints": [
+      {
+        "method": "GET",
+        "url": "http://localhost:8000/api/health",
+        "status_code": 200,
+        "cors_origin": "*",
+        "pass": true
+      },
+      {
+        "method": "POST",
+        "url": "http://localhost:8000/api/kpi",
+        "status_code": 200,
+        "cors_origin": "*",
+        "pass": true
+      },
+      {
+        "method": "GET",
+        "url": "http://localhost:8000/api/filters/years",
+        "status_code": 200,
+        "cors_origin": "*",
+        "pass": true
+      }
+    ]
+  },
+  "proxy": {
+    "main": {
+      "status_code": 200,
+      "data": [
+        2024,
+        2025,
+        2026,
+        2027,
+        2028,
+        2029,
+        2030,
+        2031,
+        2032,
+        2033,
+        2034
+      ],
+      "pass": true
+    },
+    "map": {
+      "status_code": 200,
+      "data": [
+        2024,
+        2025,
+        2026,
+        2027,
+        2028,
+        2029,
+        2030,
+        2031,
+        2032,
+        2033,
+        2034
+      ],
+      "pass": true
+    },
+    "pass": true
+  },
+  "e2e_flow": {
+    "pass": true,
+    "steps": [
+      {
+        "name": "Load Frontend",
+        "status_code": 200,
+        "pass": true
+      },
+      {
+        "name": "Get Filters",
+        "filters_loaded": 3,
+        "pass": true
+      },
+      {
+        "name": "Get KPI",
+        "status_code": 200,
+        "has_data": true,
+        "pass": true
+      },
+      {
+        "name": "Get Charts",
+        "charts_loaded": 4,
+        "pass": true
+      },
+      {
+        "name": "Get Heatmap",
+        "status_code": 200,
+        "has_data": true,
+        "pass": true
+      }
+    ]
+  },
+  "rate_limiting": {
+    "pass": true,
+    "requests_made": 10,
+    "rate_limited": false
+  },
+  "error_handling": {
+    "pass": true,
+    "tests": [
+      {
+        "name": "Invalid year (3000)",
+        "status_code": 422,
+        "expected": 422,
+        "pass": true
+      },
+      {
+        "name": "Invalid month (13)",
+        "status_code": 422,
+        "expected": 422,
+        "pass": true
+      },
+      {
+        "name": "Invalid date format",
+        "status_code": 422,
+        "expected": 422,
+        "pass": true
+      },
+      {
+        "name": "date_to < date_from",
+        "status_code": 422,
+        "expected": 422,
+        "pass": true
+      }
+    ]
+  }
+}

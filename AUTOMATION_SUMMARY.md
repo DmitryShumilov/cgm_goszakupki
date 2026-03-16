@@ -1,13 +1,29 @@
 # 📋 Автоматизация проекта CGM Dashboard
 
-**Дата:** Март 2026  
+**Дата:** 15 марта 2026
 **Статус:** ✅ Завершено
+**QA Audit:** 97.0% PASS (32/33 тестов)
+**Версия скриптов:** 1.4.1
 
 ---
 
 ## 🎯 Обзор изменений
 
 В рамках улучшения проекта и подготовки к передаче заказчику были созданы скрипты автоматизации и обновлена документация.
+
+**Последние обновления (15 марта 2026, v1.4.1):**
+- ✅ Исправлен хардкод путей к PostgreSQL (функция `Get-PostgresPath()`)
+- ✅ Улучшена проверка процессов через `Get-CimInstance`
+- ✅ Добавлены функции проверки pip пакетов
+- ✅ Обновлён базовый `.env` (Redis, Excel)
+
+### Детали обновлений скриптов (v1.4.1)
+
+| Скрипт | Изменения |
+|--------|-----------|
+| `start_project.ps1` | + Функция `Get-PostgresPath()` (автопоиск PostgreSQL 14-17)<br>+ `Get-CimInstance Win32_Process` для доступа к CommandLine<br>+ Улучшенная остановка процессов с логированием PID |
+| `check_project.ps1` | + Функция `Get-PostgresPath()`<br>+ Исправлен путь: `src\main.tsx` → `src/main.tsx`<br>+ Динамический путь к psql.exe |
+| `install_project.ps1` | + Функции `Test-Pip-Package()` и `Get-Pip-Package-Version()`<br>+ Обновлён базовый `.env` (REDIS_*, EXCEL_FILE_PATH)<br>+ Надёжная проверка установленных пакетов |
 
 ---
 
@@ -44,13 +60,18 @@
 | `TROUBLESHOOTING_RUN.md` | Решение проблем запуска (20+ сценариев) |
 | `DEVELOPMENT.md` | Руководство разработчика |
 | `docs/POWERSHELL_ENCODING.md` | Настройка UTF-8 кодировки PowerShell |
+| `docs/QA_AUDIT.md` | **Полный отчёт о тестировании (15 марта 2026)** |
 | `AUTOMATION_SUMMARY.md` | Этот файл — обзор автоматизации |
 
-### Обновлённые документы
+### Обновлённые документы (15 марта 2026)
 
 | Документ | Изменения |
 |----------|-----------|
-| `README.md` | Добавлены скрипты, обновлена структура |
+| `README.md` | QA метрики (97.0% PASS), статус серверов, версия 1.4.1 |
+| `DEVELOPMENT.md` | Инструкции по тестированию, примеры тестов, обновления скриптов v1.4.1 |
+| `CHANGELOG.md` | Версия 1.4.1 (исправления скриптов + frontend_map UX) |
+| `docs/QA_AUDIT.md` | Полный отчёт (32/33 тестов) |
+| `AUTOMATION_SUMMARY.md` | Детали обновлений скриптов v1.4.1 |
 | `.gitignore` | Добавлены .pids.json, .editorconfig |
 
 ### Новые файлы конфигурации
@@ -117,6 +138,20 @@ chcp 65001 | Out-Null
 .\stop_project.ps1      # Вечером
 ```
 
+### Проверка статуса серверов
+
+```powershell
+# Проверка всех компонентов
+.\check_project.ps1
+
+# Проверка backend API
+curl http://localhost:8000/api/health
+
+# Проверка frontend
+curl http://localhost:5173
+curl http://localhost:5174
+```
+
 ---
 
 ## 📊 Статистика изменений
@@ -124,10 +159,10 @@ chcp 65001 | Out-Null
 | Категория | Количество |
 |-----------|------------|
 | Создано скриптов | 9 |
-| Создано документов | 5 |
-| Обновлённо документов | 2 |
+| Создано документов | 6 |
+| Обновлённо документов | 4 |
 | Строк кода добавлено | ~2000 |
-| Строк документации | ~1500 |
+| Строк документации | ~2000 |
 
 ---
 
@@ -139,6 +174,7 @@ chcp 65001 | Out-Null
 - [x] `.editorconfig` настроен
 - [x] `.gitignore` обновлён
 - [x] Тесты пройдены (`check_project.ps1` → 25/25 OK)
+- [x] QA Audit: 97.0% PASS (32/33 тестов)
 
 ---
 
@@ -167,6 +203,19 @@ chcp 65001 | Out-Null
    .\convert_to_utf8bom.ps1
    ```
 
+### Запуск тестов
+
+```powershell
+# Интеграционные тесты
+python full_api_test.py
+python frontend_test.py
+python database_test.py
+python integration_test.py
+
+# Просмотр отчёта
+cat docs/QA_AUDIT.md
+```
+
 ---
 
 ## 📚 Ссылки на документацию
@@ -174,9 +223,12 @@ chcp 65001 | Out-Null
 - [QUICKSTART.md](QUICKSTART.md) — быстрый старт
 - [TROUBLESHOOTING_RUN.md](TROUBLESHOOTING_RUN.md) — решение проблем
 - [DEVELOPMENT.md](DEVELOPMENT.md) — руководство разработчика
+- [docs/QA_AUDIT.md](docs/QA_AUDIT.md) — полный отчёт о тестировании
 - [docs/POWERSHELL_ENCODING.md](docs/POWERSHELL_ENCODING.md) — настройка UTF-8
 - [README.md](README.md) — основная документация
 
 ---
 
 **Проект готов к передаче заказчику!** ✅
+
+**Последнее обновление:** 15 марта 2026

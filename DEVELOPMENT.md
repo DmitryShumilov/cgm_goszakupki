@@ -58,6 +58,22 @@
 | `start_project.ps1` | Запуск проекта | `.\start_project.ps1` |
 | `stop_project.ps1` | Остановка проекта | `.\stop_project.ps1` |
 
+### Обновления скриптов (15 марта 2026, v1.4.1)
+
+**Исправления критических проблем:**
+
+| Проблема | Решение |
+|----------|---------|
+| Хардкод пути к PostgreSQL | Функция `Get-PostgresPath()` — автопоиск (14-17 версии + PATH) |
+| Ненадёжная проверка процессов | `Get-CimInstance Win32_Process` вместо `Get-Process` |
+| Ненадёжная проверка pip | Функции `Test-Pip-Package()` и `Get-Pip-Package-Version()` |
+| Неполный базовый `.env` | Добавлены `REDIS_*`, `EXCEL_FILE_PATH` |
+
+**Новые функции:**
+- `Get-PostgresPath()` — ищет psql.exe в стандартных путях и PATH
+- `Test-Pip-Package()` — проверка установленного пакета через exit code
+- `Get-Pip-Package-Version()` — получение версии пакета
+
 ### Параметры скриптов
 
 #### start_project.ps1
@@ -313,6 +329,16 @@ npm run dev
 
 ## 🧪 Тестирование
 
+### Статус тестирования (15 марта 2026)
+
+| Компонент | Coverage | Цель | Статус |
+|-----------|----------|------|--------|
+| Backend API | 0% | 60%+ | ❌ Требуется |
+| Frontend Unit | 38% | 50%+ | ⚠️ В процессе |
+| E2E тесты | 0 сценариев | 10+ | ❌ Требуется |
+
+**QA Audit:** 97.0% PASS (32/33 интеграционных тестов)
+
 ### Backend тесты
 
 ```powershell
@@ -321,6 +347,32 @@ pytest              # Запуск всех тестов
 pytest -v           # Подробный вывод
 pytest --cov        # Покрытие кода
 pytest tests/test_api.py  # Конкретный файл
+```
+
+**Структура тестов:**
+```
+backend/tests/
+├── conftest.py          # Фикстуры
+├── test_kpi.py          # Тесты KPI endpoints
+├── test_charts.py       # Тесты charts endpoints
+├── test_filters.py      # Тесты filters endpoints
+└── test_validation.py   # Тесты валидации
+```
+
+**Пример теста (`test_kpi.py`):**
+```python
+def test_kpi_no_filters(client):
+    """Тест KPI без фильтров"""
+    response = client.get("/api/kpi")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_amount" in data
+    assert "count" in data
+
+def test_kpi_with_year_filter(client):
+    """Тест KPI с фильтром по годам"""
+    response = client.get("/api/kpi?years=2024,2025")
+    assert response.status_code == 200
 ```
 
 ### Frontend тесты
@@ -332,6 +384,22 @@ npm run test:ui     # Тесты с UI
 npm run test:coverage  # Покрытие кода
 ```
 
+**Структура тестов:**
+```
+frontend/src/
+├── stores/__tests__/
+│   └── filterStore.test.ts
+├── components/
+│   ├── kpi/__tests__/
+│   │   └── KpiPanel.test.tsx
+│   ├── filters/__tests__/
+│   │   └── FilterPanel.test.tsx
+│   └── charts/__tests__/
+│       ├── DynamicsChart.test.tsx
+│       ├── RegionsChart.test.tsx
+│       └── SuppliersChart.test.tsx
+```
+
 ### E2E тесты (Playwright)
 
 ```powershell
@@ -340,6 +408,56 @@ npm run test:e2e        # Запуск E2E тестов
 npm run test:e2e:ui     # E2E с UI
 npm run test:e2e:report # Отчёт о тестах
 ```
+
+**Структура E2E тестов:**
+```
+frontend/tests/e2e/
+├── dashboard.spec.ts    # 10 сценариев
+├── mobile.spec.ts       # 5 сценариев
+└── filters.spec.ts      # 4 сценария
+```
+
+**Пример теста (`dashboard.spec.ts`):**
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('загрузка KPI карточек', async ({ page }) => {
+  await page.goto('http://localhost:5173');
+  await expect(page.locator('[data-testid="kpi-total"]')).toBeVisible();
+});
+
+test('загрузка диаграмм', async ({ page }) => {
+  await page.goto('http://localhost:5173');
+  await expect(page.locator('[data-testid="chart-dynamics"]')).toBeVisible();
+});
+```
+
+### Интеграционные тесты
+
+Автоматические тесты API (32 теста):
+
+```powershell
+# Backend API тесты (11 тестов)
+python full_api_test.py
+
+# Frontend тесты (8 тестов)
+python frontend_test.py
+
+# Database тесты (5 тестов)
+python database_test.py
+
+# Integration тесты (7 тестов)
+python integration_test.py
+```
+
+**Результаты (15 марта 2026):**
+- Backend API: ✅ 11/11 (100%)
+- Frontend: ✅ 8/8 (100%)
+- Database: ✅ 5/5 (100%)
+- Integration: ⚠️ 6/7 (85.7%)
+- Documentation: ✅ 2/2 (100%)
+
+📄 **Полный отчёт:** [docs/QA_AUDIT.md](docs/QA_AUDIT.md)
 
 ---
 

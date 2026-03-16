@@ -41,8 +41,9 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-# Загрузка переменных окружения
-load_dotenv()
+# Загрузка переменных окружения из корневого .env
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+load_dotenv(dotenv_path)
 
 # Параметры подключения к PostgreSQL
 DB_CONFIG = {
@@ -114,21 +115,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS для frontend - ДОБАВЛЕНО СРАЗУ ПОСЛЕ СОЗДАНИЯ APP
-allowed_origins = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:5174,http://localhost:80,http://localhost"
-).split(",")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    max_age=600,
-)
-
 @app.on_event("shutdown")
 def shutdown_db_pool():
     """Закрытие всех соединений при остановке приложения"""
@@ -148,15 +134,6 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.middleware("http")
-async def add_cors_headers(request: Request, call_next):
-    """Добавление CORS заголовков"""
-    response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return response
-
-@app.middleware("http")
 async def log_requests(request: Request, call_next):
     import time
     start_time = time.time()
@@ -166,6 +143,32 @@ async def log_requests(request: Request, call_next):
     process_time = time.time() - start_time
     logger.info(f"{request.method} {request.url.path} - {response.status_code} - {process_time:.3f}s")
 
+    return response
+
+# CORS для frontend - ручной middleware (должен быть после других middleware)
+# В production на публичном сервере ограничьте конкретными доменами
+
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    """Добавление CORS заголовков для всех origin"""
+    # Обработка OPTIONS запросов (CORS preflight)
+    if request.method == "OPTIONS":
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            content={"status": "ok"},
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "600",
+            }
+        )
+
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Max-Age"] = "600"
     return response
 
 
@@ -796,6 +799,19 @@ def get_products_list():
 # Health check
 # ============================================================================
 
+@app.options("/api/health")
+async def health_check_options(request: Request):
+    """OPTIONS handler for health check"""
+    from fastapi.responses import JSONResponse
+    origin = request.headers.get("origin")
+    headers = {}
+    if origin and origin in allowed_origins:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        headers["Access-Control-Max-Age"] = "600"
+    return JSONResponse(content={"status": "ok"}, headers=headers)
+
 @app.get("/api/health")
 @limiter.limit("30/minute")
 def health_check(request: Request):
@@ -805,10 +821,44 @@ def health_check(request: Request):
             cur.execute("SELECT COUNT(*) FROM purchases")
             result = cur.fetchone()
             count = result['count'] if result else 0
-        return {"status": "ok", "records": count}
+        response_data = {"status": "ok", "records": count}
+        return response_data
     except Exception as e:
         logger.error(f"Health check error: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@app.get("/api/debug/suppliers")
+def debug_suppliers():
+    """Debug: проверка поставщиков в БД"""
+    with get_db_cursor() as cur:
+        # Получаем уникальных поставщиков
+        cur.execute("SELECT DISTINCT distributor FROM purchases ORDER BY distributor")
+        all_suppliers = [row['distributor'] for row in cur.fetchall()]
+        
+        # Проверяем БСС
+        cur.execute("SELECT distributor, COUNT(*) as cnt, SUM(amount_rub) as total FROM purchases WHERE distributor ILIKE %s GROUP BY distributor", ('%БСС%',))
+        bss_results = [dict(row) for row in cur.fetchall()]
+        
+        # Проверяем точное совпадение
+        cur.execute("SELECT distributor, COUNT(*) as cnt, SUM(amount_rub) as total FROM purchases WHERE distributor = %s GROUP BY distributor", ('ООО "БСС"',))
+        exact_results = [dict(row) for row in cur.fetchall()]
+        
+        # Тест фильтрации
+        cur.execute("""
+            SELECT COUNT(*) as cnt, SUM(amount_rub) as total
+            FROM purchases
+            WHERE distributor IN (%s)
+        """, ('ООО "БСС"',))
+        filter_result = dict(cur.fetchone())
+        
+    return {
+        "all_suppliers_count": len(all_suppliers),
+        "all_suppliers_sample": all_suppliers[:10],
+        "bss_ilike": bss_results,
+        "bss_exact": exact_results,
+        "bss_filter_test": filter_result
+    }
 
 
 # ============================================================================

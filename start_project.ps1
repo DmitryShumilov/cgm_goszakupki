@@ -45,6 +45,7 @@ param(
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendDir = Join-Path $ScriptDir "backend"
 $FrontendDir = Join-Path $ScriptDir "frontend"
+$FrontendMapDir = Join-Path $ScriptDir "frontend_map"
 $EnvFile = Join-Path $ScriptDir ".env"
 $PidFile = Join-Path $ScriptDir ".pids.json"
 $LogDir = Join-Path $ScriptDir "logs"
@@ -105,17 +106,45 @@ function Test-Node {
     }
 }
 
+function Get-PostgresPath {
+    <#
+    .SYNOPSIS
+        Находит путь к PostgreSQL psql.exe.
+    #>
+    # Проверка стандартных путей установки
+    $paths = @(
+        "C:\Program Files\PostgreSQL\17\bin",
+        "C:\Program Files\PostgreSQL\16\bin",
+        "C:\Program Files\PostgreSQL\15\bin",
+        "C:\Program Files\PostgreSQL\14\bin"
+    )
+    foreach ($p in $paths) {
+        if (Test-Path "$p\psql.exe") {
+            Write-Info "PostgreSQL найден: $p"
+            return $p
+        }
+    }
+    # Поиск через where.exe
+    $result = where.exe psql 2>$null
+    if ($result) {
+        $path = Split-Path $result[0]
+        Write-Info "PostgreSQL найден через where.exe: $path"
+        return $path
+    }
+    return $null
+}
+
 function Test-PostgreSQL {
     param([string]$Password)
-    $env:PGPASSWORD = $Password
+    
+    # Простая проверка - слушаем ли порт 5432
     try {
-        $result = & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -U postgres -c "SELECT 1" 2>&1
-        if ($result -like "*1 row*") {
-            return $true, "PostgreSQL connected"
-        }
-        return $false, "PostgreSQL connection failed"
+        $tcpClient = New-Object System.Net.Sockets.TcpClient
+        $tcpClient.Connect("localhost", 5432)
+        $tcpClient.Close()
+        return $true, "PostgreSQL running on port 5432"
     } catch {
-        return $false, "PostgreSQL not running"
+        return $false, "PostgreSQL not running on port 5432"
     }
 }
 
@@ -131,16 +160,17 @@ function Get-EnvValue {
 }
 
 function Save-Pid {
-    param([int]$BackendPid, [int]$FrontendPid)
+    param([int]$BackendPid, [int]$FrontendPid, [int]$FrontendMapPid)
     $pids = @{}
     if ($BackendPid -gt 0) { $pids["backend"] = $BackendPid }
     if ($FrontendPid -gt 0) { $pids["frontend"] = $FrontendPid }
+    if ($FrontendMapPid -gt 0) { $pids["frontend_map"] = $FrontendMapPid }
     $pids | ConvertTo-Json | Set-Content $PidFile -Encoding UTF8
 }
 
 function Stop-Existing {
     Write-Info "Проверка существующих процессов..."
-    
+
     # Остановка по PID файлу
     if (Test-Path $PidFile) {
         $pids = Get-Content $PidFile | ConvertFrom-Json
@@ -152,18 +182,36 @@ function Stop-Existing {
             Stop-Process -Id $pids.frontend -Force -ErrorAction SilentlyContinue
             Write-Info "Остановлен frontend (PID: $($pids.frontend))"
         }
+        if ($pids.frontend_map) {
+            Stop-Process -Id $pids.frontend_map -Force -ErrorAction SilentlyContinue
+            Write-Info "Остановлен frontend_map (PID: $($pids.frontend_map))"
+        }
         Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
     }
-    
-    # Остановка по имени процесса
-    Get-Process | Where-Object { 
-        $_.ProcessName -eq "python" -and $_.CommandLine -like "*backend/main.py*" 
-    } | Stop-Process -Force -ErrorAction SilentlyContinue
-    
-    Get-Process | Where-Object { 
-        $_.ProcessName -eq "node" -and $_.CommandLine -like "*vite*" 
-    } | Stop-Process -Force -ErrorAction SilentlyContinue
-    
+
+    # Остановка по имени процесса (используем Get-CimInstance для доступа к CommandLine)
+    try {
+        Get-CimInstance Win32_Process | Where-Object {
+            $_.CommandLine -like "*backend/main.py*"
+        } | ForEach-Object {
+            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+            Write-Info "Остановлен backend процесс (PID: $($_.ProcessId))"
+        }
+    } catch {
+        Write-Info "Не удалось проверить процессы backend"
+    }
+
+    try {
+        Get-CimInstance Win32_Process | Where-Object {
+            $_.CommandLine -like "*frontend*" -and $_.CommandLine -like "*vite*" -and $_.ProcessName -eq "node.exe"
+        } | ForEach-Object {
+            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+            Write-Info "Остановлен frontend процесс (PID: $($_.ProcessId))"
+        }
+    } catch {
+        Write-Info "Не удалось проверить процессы frontend"
+    }
+
     Start-Sleep -Seconds 1
 }
 
@@ -309,19 +357,24 @@ if (!$NoBackend) {
         Write-Info "Режим разработки: подробное логирование"
         $env:LOG_LEVEL = "DEBUG"
     }
-    
+
+    # Создаём отдельные файлы для stdout и stderr
+    $backendLogStdout = Join-Path $LogDir "backend_stdout_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+    $backendLogStderr = Join-Path $LogDir "backend_stderr_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+
     # Запуск backend в фоновом режиме
     $process = Start-Process python `
         -ArgumentList $backendArgs `
         -WorkingDirectory $BackendDir `
         -PassThru `
-        -RedirectStandardOutput $backendLog `
-        -RedirectStandardError $backendLog `
+        -RedirectStandardOutput $backendLogStdout `
+        -RedirectStandardError $backendLogStderr `
         -WindowStyle Hidden
-    
+
     $backendPid = $process.Id
     Write-Info "Backend запущен с PID: $backendPid"
-    Write-Info "Лог файл: $backendLog"
+    Write-Info "Лог stdout: $backendLogStdout"
+    Write-Info "Лог stderr: $backendLogStderr"
     
     # Ожидание запуска backend
     Write-Info "Ожидание запуска backend (до 10 секунд)..."
@@ -356,28 +409,29 @@ if (!$NoBackend) {
 # Шаг 7: Запуск Frontend
 # -----------------------------------------------------------------------------
 $frontendPid = 0
+$frontendMapPid = 0
 
 if (!$NoFrontend) {
     Write-Step "Шаг 7: Запуск Frontend"
-    
+
     $frontendLog = Join-Path $LogDir "frontend_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-    
+
     # Запуск frontend в фоновом режиме
     $process = Start-Process npm `
         -ArgumentList "run", "dev" `
         -WorkingDirectory $FrontendDir `
         -PassThru `
         -WindowStyle Hidden
-    
+
     $frontendPid = $process.Id
     Write-Info "Frontend запущен с PID: $frontendPid"
-    
+
     # Ожидание запуска frontend
     Write-Info "Ожидание запуска frontend (до 10 секунд)..."
     $maxAttempts = 20
     $attempt = 0
     $frontendReady = $false
-    
+
     while ($attempt -lt $maxAttempts) {
         Start-Sleep -Milliseconds 500
         try {
@@ -388,11 +442,75 @@ if (!$NoFrontend) {
             $attempt++
         }
     }
-    
+
     if ($frontendReady) {
         Write-Success "Frontend запущен: http://localhost:5173"
     } else {
         Write-Warning-Custom "Frontend может запускаться дольше обычного"
+    }
+
+    # -----------------------------------------------------------------------------
+    # Шаг 7б: Запуск Frontend Map (Карта регионов)
+    # -----------------------------------------------------------------------------
+    Write-Step "Шаг 7б: Запуск Frontend Map (Карта регионов)"
+
+    # Проверка наличия директории frontend_map
+    if (Test-Path $FrontendMapDir) {
+        $frontendMapLog = Join-Path $LogDir "frontend_map_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+
+        # Проверка наличия package.json
+        if (Test-Path (Join-Path $FrontendMapDir "package.json")) {
+            # Проверка node_modules
+            $nodeModulesMap = Join-Path $FrontendMapDir "node_modules"
+            if (!(Test-Path $nodeModulesMap)) {
+                Write-Warning-Custom "node_modules не найден в frontend_map. Установка зависимостей..."
+                Set-Location $FrontendMapDir
+                npm install
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Frontend Map зависимости установлены"
+                } else {
+                    Write-Error-Custom "Ошибка установки зависимостей frontend_map"
+                }
+                Set-Location $ScriptDir
+            }
+
+            # Запуск frontend_map в фоновом режиме
+            $process = Start-Process npm `
+                -ArgumentList "run", "dev" `
+                -WorkingDirectory $FrontendMapDir `
+                -PassThru `
+                -WindowStyle Hidden
+
+            $frontendMapPid = $process.Id
+            Write-Info "Frontend Map запущен с PID: $frontendMapPid"
+
+            # Ожидание запуска frontend_map
+            Write-Info "Ожидание запуска frontend_map (до 10 секунд)..."
+            $maxAttempts = 20
+            $attempt = 0
+            $frontendMapReady = $false
+
+            while ($attempt -lt $maxAttempts) {
+                Start-Sleep -Milliseconds 500
+                try {
+                    $response = Invoke-RestMethod -Uri "http://localhost:5174" -Method Get -ErrorAction Stop
+                    $frontendMapReady = $true
+                    break
+                } catch {
+                    $attempt++
+                }
+            }
+
+            if ($frontendMapReady) {
+                Write-Success "Frontend Map запущен: http://localhost:5174"
+            } else {
+                Write-Warning-Custom "Frontend Map может запускаться дольше обычного"
+            }
+        } else {
+            Write-Warning-Custom "frontend_map: package.json не найден, пропускаем"
+        }
+    } else {
+        Write-Info "frontend_map: директория не найдена, пропускаем"
     }
 }
 
@@ -401,7 +519,7 @@ if (!$NoFrontend) {
 # -----------------------------------------------------------------------------
 Write-Step "Шаг 8: Завершение"
 
-Save-Pid -BackendPid $backendPid -FrontendPid $frontendPid
+Save-Pid -BackendPid $backendPid -FrontendPid $frontendPid -FrontendMapPid $frontendMapPid
 Write-Success "PID процессов сохранены в .pids.json"
 
 Write-Host "`n"
@@ -409,11 +527,12 @@ Write-Host "╔═════════════════════�
 Write-Host "║              ПРОЕКТ УСПЕШНО ЗАПУЩЕН!                     ║" -ForegroundColor $ColorSuccess
 Write-Host "╠══════════════════════════════════════════════════════════╣" -ForegroundColor $ColorSuccess
 if (!$NoBackend) {
-    Write-Host "║  Backend API:  http://localhost:8000                     ║" -ForegroundColor $ColorInfo
-    Write-Host "║  Swagger:      http://localhost:8000/docs                ║" -ForegroundColor $ColorInfo
+    Write-Host "║  Backend API:    http://localhost:8000                     ║" -ForegroundColor $ColorInfo
+    Write-Host "║  Swagger:        http://localhost:8000/docs                ║" -ForegroundColor $ColorInfo
 }
 if (!$NoFrontend) {
-    Write-Host "║  Frontend:     http://localhost:5173                     ║" -ForegroundColor $ColorInfo
+    Write-Host "║  Frontend:       http://localhost:5173                     ║" -ForegroundColor $ColorInfo
+    Write-Host "║  Frontend Map:   http://localhost:5174                     ║" -ForegroundColor $ColorInfo
 }
 Write-Host "╠══════════════════════════════════════════════════════════╣" -ForegroundColor $ColorSuccess
 Write-Host "║  Для остановки выполните: .\stop_project.ps1             ║" -ForegroundColor $ColorWarning

@@ -117,65 +117,20 @@ export const HeaderFilters = ({ onFiltersChange, regionCount }: HeaderFiltersPro
             },
           },
         }}
-        renderOption={(props, option, { selected }) => {
-          const allSelected = selectedYears.length === availableYears.length && availableYears.length > 0;
-          const isFirstOption = option === availableYears[0];
-          
-          // Первая опция - "Выбрать всё"
-          if (isFirstOption) {
-            return (
-              <Box
-                key="select-all"
-                onClick={() => {
-                  if (allSelected) {
-                    availableYears.forEach(y => toggleYear(y));
-                  } else {
-                    availableYears.forEach(y => {
-                      if (!selectedYears.includes(y)) toggleYear(y);
-                    });
-                  }
-                }}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  cursor: 'pointer',
-                  borderBottom: '1px solid rgba(255,255,255,0.2)',
-                  fontWeight: 600,
-                  backgroundColor: 'rgba(51, 136, 255, 0.15)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(51, 136, 255, 0.25)',
-                  },
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  readOnly
-                  style={{ marginRight: 8, accentColor: '#3388ff', pointerEvents: 'none' }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                {allSelected ? 'Сбросить всё' : 'Выбрать всё'}
-              </Box>
-            );
-          }
-          
-          // Остальные опции - годы
-          return (
-            <li {...props}>
-              <input
-                type="checkbox"
-                checked={selected}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  toggleYear(option);
-                }}
-                style={{ marginRight: 8, accentColor: '#3388ff' }}
-              />
-              {option}
-            </li>
-          );
-        }}
+        renderOption={(props, option, { selected }) => (
+          <li {...props}>
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={(e) => {
+                e.stopPropagation();
+                toggleYear(option);
+              }}
+              style={{ marginRight: 8, accentColor: '#3388ff' }}
+            />
+            {option}
+          </li>
+        )}
         renderInput={(params) => (
           <TextField
             {...params}

@@ -1,0 +1,133 @@
+{
+  "hash": "be4f2e9f",
+  "configHash": "c6508eac",
+  "lockfileHash": "2a20336c",
+  "browserHash": "c02732e3",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "906dd078",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "eb490558",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "fc5f9e13",
+      "needsInterop": true
+    },
+    "@mui/material/styles": {
+      "src": "../../node_modules/@mui/material/esm/styles/index.js",
+      "file": "@mui_material_styles.js",
+      "fileHash": "ba995925",
+      "needsInterop": false
+    },
+    "@mui/material/CssBaseline": {
+      "src": "../../node_modules/@mui/material/esm/CssBaseline/index.js",
+      "file": "@mui_material_CssBaseline.js",
+      "fileHash": "fa5216a3",
+      "needsInterop": false
+    },
+    "@mui/material": {
+      "src": "../../node_modules/@mui/material/esm/index.js",
+      "file": "@mui_material.js",
+      "fileHash": "95275db8",
+      "needsInterop": false
+    },
+    "zustand": {
+      "src": "../../node_modules/zustand/esm/index.mjs",
+      "file": "zustand.js",
+      "fileHash": "bf88a5ca",
+      "needsInterop": false
+    },
+    "zustand/middleware": {
+      "src": "../../node_modules/zustand/esm/middleware.mjs",
+      "file": "zustand_middleware.js",
+      "fileHash": "fb50f815",
+      "needsInterop": false
+    },
+    "react-leaflet": {
+      "src": "../../node_modules/react-leaflet/lib/index.js",
+      "file": "react-leaflet.js",
+      "fileHash": "28f89045",
+      "needsInterop": false
+    },
+    "leaflet": {
+      "src": "../../node_modules/leaflet/dist/leaflet-src.js",
+      "file": "leaflet.js",
+      "fileHash": "fb9902d7",
+      "needsInterop": true
+    },
+    "@mui/icons-material/ClearAll": {
+      "src": "../../node_modules/@mui/icons-material/esm/ClearAll.js",
+      "file": "@mui_icons-material_ClearAll.js",
+      "fileHash": "19a70e9f",
+      "needsInterop": false
+    },
+    "@mui/icons-material/FileDownload": {
+      "src": "../../node_modules/@mui/icons-material/esm/FileDownload.js",
+      "file": "@mui_icons-material_FileDownload.js",
+      "fileHash": "b8dc1444",
+      "needsInterop": false
+    },
+    "recharts": {
+      "src": "../../node_modules/recharts/es6/index.js",
+      "file": "recharts.js",
+      "fileHash": "43c111cc",
+      "needsInterop": false
+    },
+    "@mui/icons-material/Info": {
+      "src": "../../node_modules/@mui/icons-material/esm/Info.js",
+      "file": "@mui_icons-material_Info.js",
+      "fileHash": "b5660072",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "cb0006d3",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-DGCGC3HI": {
+      "file": "chunk-DGCGC3HI.js"
+    },
+    "chunk-C6WWHQR7": {
+      "file": "chunk-C6WWHQR7.js"
+    },
+    "chunk-XZUYAYKB": {
+      "file": "chunk-XZUYAYKB.js"
+    },
+    "chunk-AU2MKR2E": {
+      "file": "chunk-AU2MKR2E.js"
+    },
+    "chunk-5KWJMEIS": {
+      "file": "chunk-5KWJMEIS.js"
+    },
+    "chunk-YZV4EJRI": {
+      "file": "chunk-YZV4EJRI.js"
+    },
+    "chunk-5DXLWGE2": {
+      "file": "chunk-5DXLWGE2.js"
+    },
+    "chunk-ID3CS5N7": {
+      "file": "chunk-ID3CS5N7.js"
+    },
+    "chunk-Y6LNP43O": {
+      "file": "chunk-Y6LNP43O.js"
+    },
+    "chunk-VX2H6PUQ": {
+      "file": "chunk-VX2H6PUQ.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}
