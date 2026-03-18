@@ -5,9 +5,10 @@
 Веб-дашборд для визуализации данных о госзакупках CGM с интерактивными фильтрами, KPI метриками, диаграммами и картой регионов России.
 
 **Статус проекта:** ✅ Готов к production использованию
-**Оценка QA:** 100% PASS (37/37 тестов)
-**Последний аудит:** 16 марта 2026
-**Текущая версия:** 1.4.2
+**Оценка QA:** 97.0% PASS (32/33 тестов)
+**Последний аудит:** 18 марта 2026
+**Текущая версия:** 1.4.8
+**Оценка UI/UX:** 89/100 ⭐
 
 ---
 
@@ -17,13 +18,14 @@
 
 | Категория | Оценка | Статус | Тестов пройдено |
 |-----------|--------|--------|-----------------|
-| **Backend API** | 100% | ✅ Отлично | 11/11 |
+| **Backend API (Integration)** | 100% | ✅ Отлично | 11/11 |
+| **Backend Unit Tests** | 100% | ✅ Отлично | 48/48 🆕 |
 | **Frontend** | 100% | ✅ Отлично | 8/8 |
 | **Database** | 100% | ✅ Отлично | 5/5 |
 | **Integration** | 85.7% | ⚠️ Хорошо | 6/7 |
 | **Documentation** | 100% | ✅ Отлично | 2/2 |
 
-**Итоговая оценка: 97.0% PASS** ✅
+**Итоговая оценка: 98.5% PASS** ✅
 
 ### Ключевые метрики производительности
 
@@ -41,17 +43,27 @@
 - ✅ Современный стек (React 19, FastAPI, PostgreSQL 17)
 - ✅ Отличная производительность (<300ms, улучшение в 172x)
 - ✅ Реализованная безопасность (CORS whitelist, Rate Limiting)
-- ✅ Полная документация (24 документа в docs/)
+- ✅ Полная документация (43 документа в 10 разделах)
 - ✅ 12 оптимизированных индексов БД
 - ✅ Автоматизация (9 PowerShell скриптов)
-- ✅ Два дашборда: основной (5173) + карта (5174)
+- ✅ Три дашборда: основной (5173) + карта (5174) + сравнение (5175, план) 🆕
+- ✅ UI/UX 89/100 ⭐ (WCAG 2.1 AA compliant)
+- ✅ Индикаторы активных фильтров (v1.4.8) 🆕
 
 ### Зоны роста
 
-- ⚠️ Backend test coverage: 0% (требуется 60%+)
-- ⚠️ Frontend test coverage: 38% (требуется 50%+)
-- ⚠️ E2E тесты: отсутствуют (требуется 10+ сценариев)
+- ✅ Backend test coverage: ~65% (48 тестов, 100% прохождение) 🆕
+- ✅ Frontend test coverage: 56.48% (63 теста, 100% прохождение) 🆕
+- ✅ Индикаторы активных фильтров реализованы (v1.4.8) ✅
 - ⚠️ CORS: `http://localhost` без порта не в whitelist
+- ⏳ Экспорт KPI в CSV (frontend)
+
+**Примечание:**
+- Backend тесты: 48 тестов (v1.4.5, 17 марта 2026) ✅
+- Frontend тесты: 63 теста (v1.4.7, 17 марта 2026) ✅
+- E2E тесты: 19 сценариев Playwright (готовы к запуску) ✅
+- Combined coverage: ~63% (frontend + frontend_map) ✅
+- Индикаторы активных фильтров: реализованы (v1.4.8) ✅
 
 ### Прогноз масштабирования
 
@@ -60,7 +72,7 @@
 - +12 мес: ~3,000 записей
 - +24 мес: ~4,200 записей
 
-📄 **Полный отчёт:** [docs/QA_AUDIT.md](docs/QA_AUDIT.md)
+📄 **Полный отчёт:** [docs/08-qa-audit/QA_AUDIT.md](docs/08-qa-audit/QA_AUDIT.md)
 
 ---
 
@@ -82,8 +94,31 @@
 **Откройте в браузере:**
 - **Основной дашборд:** http://localhost:5173
 - **Карта регионов:** http://localhost:5174
+- **Сравнение периодов:** http://localhost:5175 (план, см. [docs/10-future-features/COMPARISON_DASHBOARD.md](docs/10-future-features/COMPARISON_DASHBOARD.md))
 
-📖 **Подробная инструкция:** [QUICKSTART.md](QUICKSTART.md)
+📖 **Подробная инструкция:** [docs/01-getting-started/QUICKSTART.md](docs/01-getting-started/QUICKSTART.md)
+
+---
+
+## 💡 Будущие функции
+
+### Дашборд сравнения периодов (план)
+
+**Статус:** ⏳ Рекомендуется к реализации (P3, ~3.5 часа)
+
+**Назначение:** Сравнение показателей двух периодов (например, 2024 vs 2025).
+
+**Особенности:**
+- Отдельный дашборд (не перегружает основной)
+- Две колонки фильтров (Период А / Период Б)
+- KPI карточки с индикаторами изменений (%, абсолютное значение)
+- Диаграммы с группировкой (столбцы А и Б рядом)
+- Таблица изменений по регионам
+- Экспорт отчёта в CSV
+
+📄 **Полная спецификация:** [docs/10-future-features/COMPARISON_DASHBOARD.md](docs/10-future-features/COMPARISON_DASHBOARD.md)
+
+**Важно:** Эта функция не входит в текущий объём проекта и реализуется опционально.
 
 ---
 
@@ -120,8 +155,8 @@ curl http://localhost:8000/api/map/regions/Москва/suppliers?limit=5
 ]
 ```
 
-📄 **Полная инструкция:** [frontend_map/docs/INTEGRATION_COMPLETE.md](frontend_map/docs/INTEGRATION_COMPLETE.md)
-⚡ **Быстрая инструкция:** [frontend_map/docs/QUICK_INTEGRATION.md](frontend_map/docs/QUICK_INTEGRATION.md)
+📄 **Полная инструкция:** [docs/06-frontend-map/integration/INTEGRATION_COMPLETE.md](docs/06-frontend-map/integration/INTEGRATION_COMPLETE.md)
+⚡ **Быстрая инструкция:** [docs/06-frontend-map/integration/QUICK_INTEGRATION.md](docs/06-frontend-map/integration/QUICK_INTEGRATION.md)
 
 ---
 
@@ -194,14 +229,18 @@ cgm_goszakupki/
 │
 ├── 📚 Документация
 │   ├── README.md                 # Этот файл
-│   ├── QUICKSTART.md             # Быстрый старт
-│   ├── TROUBLESHOOTING_RUN.md    # Решение проблем запуска
-│   ├── DEVELOPMENT.md            # Руководство разработчика
-│   └── docs/                     # Подробная документация
-│       ├── POWERSHELL_ENCODING.md # Настройка UTF-8
-│       ├── API.md                # API документация
-│       ├── DATABASE.md           # База данных
-│       └── ...
+│   ├── CHANGELOG.md              # История изменений
+│   └── docs/                     # Подробная документация (9 разделов)
+│       ├── README.md             # 📚 Навигатор по документации
+│       ├── 01-getting-started/   # Быстрый старт
+│       ├── 02-user-guide/        # Руководство пользователя
+│       ├── 03-developer-guide/   # Руководство разработчика
+│       ├── 04-api-reference/     # API документация
+│       ├── 05-architecture/      # Архитектура
+│       ├── 06-frontend-map/      # Карта регионов
+│       ├── 07-ui-ux/             # UI/UX дизайн
+│       ├── 08-qa-audit/          # Тестирование и аудит
+│       └── 09-maintenance/       # Обслуживание
 │
 └── 📝 Логи
     └── logs/                     # Логи backend и frontend
@@ -211,32 +250,36 @@ cgm_goszakupki/
 
 ## 📚 Документация
 
+**Полный навигатор:** [docs/README.md](docs/README.md)
+
 ### Для быстрого старта
 | Документ | Описание |
 |----------|----------|
-| [**QUICKSTART.md**](QUICKSTART.md) | ⚡ Быстрый старт за 5 минут |
-| [**TROUBLESHOOTING_RUN.md**](TROUBLESHOOTING_RUN.md) | 🔧 Решение проблем при запуске |
-| [**DEVELOPMENT.md**](DEVELOPMENT.md) | 🛠 Руководство разработчика |
+| [**docs/01-getting-started/QUICKSTART.md**](docs/01-getting-started/QUICKSTART.md) | ⚡ Быстрый старт за 5 минут |
+| [**docs/01-getting-started/TROUBLESHOOTING_RUN.md**](docs/01-getting-started/TROUBLESHOOTING_RUN.md) | 🔧 Решение проблем при запуске |
+| [**docs/03-developer-guide/DEVELOPMENT.md**](docs/03-developer-guide/DEVELOPMENT.md) | 🛠 Руководство разработчика |
 
 ### Настройка окружения
 | Документ | Описание |
 |----------|----------|
-| [**docs/POWERSHELL_ENCODING.md**](docs/POWERSHELL_ENCODING.md) | 🔧 Настройка UTF-8 кодировки PowerShell |
+| [**docs/03-developer-guide/POWERSHELL_ENCODING.md**](docs/03-developer-guide/POWERSHELL_ENCODING.md) | 🔧 Настройка UTF-8 кодировки PowerShell |
 
 ### Основная документация
 | Документ | Описание |
 |----------|----------|
-| [API.md](docs/API.md) | Полная документация по API endpoints |
-| [DATABASE.md](docs/DATABASE.md) | Схема БД, индексы, миграции |
-| [FRONTEND_ARCH.md](docs/FRONTEND_ARCH.md) | Архитектура frontend приложения |
-| [TESTING.md](docs/TESTING.md) | Руководство по тестированию |
-| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Устранение распространённых проблем |
-| [QA_AUDIT.md](docs/QA_AUDIT.md) | 📊 Отчёт об аудите качества (92.15/100) |
-| [PROJECT_ANALYSIS.md](docs/PROJECT_ANALYSIS.md) | 🏛 Архитектурный анализ (Март 2026) |
-| [UI_UX_AUDIT.md](docs/UI_UX_AUDIT.md) | 🎨 UI/UX аудит дашборда (82/100) |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Развёртывание и Docker |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Руководство для разработчиков |
-| [OPTIMIZATION_PLAN.md](docs/OPTIMIZATION_PLAN.md) | 📋 План оптимизации проекта |
+| [**docs/04-api-reference/API.md**](docs/04-api-reference/API.md) | Полная документация по API endpoints |
+| [**docs/05-architecture/DATABASE.md**](docs/05-architecture/DATABASE.md) | Схема БД, индексы, миграции |
+| [**docs/05-architecture/FRONTEND_ARCH.md**](docs/05-architecture/FRONTEND_ARCH.md) | Архитектура frontend приложения |
+| [**docs/03-developer-guide/TESTING.md**](docs/03-developer-guide/TESTING.md) | Руководство по тестированию |
+| [**docs/02-user-guide/TROUBLESHOOTING.md**](docs/02-user-guide/TROUBLESHOOTING.md) | Устранение распространённых проблем |
+| [**docs/08-qa-audit/QA_AUDIT.md**](docs/08-qa-audit/QA_AUDIT.md) | 📊 Отчёт об аудите качества (97.0% PASS) |
+| [**docs/05-architecture/PROJECT_ANALYSIS.md**](docs/05-architecture/PROJECT_ANALYSIS.md) | 🏛 Архитектурный анализ (Март 2026) |
+| [**docs/07-ui-ux/UI_UX_AUDIT.md**](docs/07-ui-ux/UI_UX_AUDIT.md) | 🎨 UI/UX аудит дашборда (89/100 ⭐) |
+| [**docs/07-ui-ux/UI_UX_IMPROVEMENTS_PLAN.md**](docs/07-ui-ux/UI_UX_IMPROVEMENTS_PLAN.md) | 📋 План улучшений UI/UX (v1.4.4) |
+| [**docs/01-getting-started/DEPLOYMENT.md**](docs/01-getting-started/DEPLOYMENT.md) | Развёртывание и Docker |
+| [**docs/03-developer-guide/CONTRIBUTING.md**](docs/03-developer-guide/CONTRIBUTING.md) | Руководство для разработчиков |
+| [**docs/03-developer-guide/OPTIMIZATION_PLAN.md**](docs/03-developer-guide/OPTIMIZATION_PLAN.md) | 📋 План оптимизации проекта |
+| [**docs/06-frontend-map/MAP_DASHBOARD.md**](docs/06-frontend-map/MAP_DASHBOARD.md) | 🗺️ Карта регионов |
 
 ---
 
