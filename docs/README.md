@@ -1,250 +1,259 @@
-# 📚 CGM Dashboard Documentation
+# 📚 Документация CGM Dashboard
 
-Добро пожаловать в документацию проекта CGM Dashboard!
+**Навигатор по документации проекта**
 
----
-
-## 🏗️ Архитектура системы
-
-### Общая схема
-
-```mermaid
-flowchart LR
-    subgraph "Data Sources"
-        Excel[📊 Excel файл<br/>database.xlsx]
-    end
-    
-    subgraph "Database Layer"
-        PostgreSQL[(🗄️ PostgreSQL 17<br/>cgm_dashboard)]
-    end
-    
-    subgraph "Backend Layer"
-        FastAPI[⚡ FastAPI<br/>Port 8000]
-        Cache[💾 SimpleCache<br/>TTL 5 min]
-    end
-    
-    subgraph "Frontend Layer"
-        React[⚛️ React 19<br/>Port 5173]
-        MUI[🎨 Material-UI]
-        Charts[📈 Recharts]
-    end
-    
-    subgraph "Users"
-        Browser[👥 Пользователь<br/>Browser]
-    end
-    
-    Excel -->|Import| PostgreSQL
-    PostgreSQL <--> FastAPI
-    FastAPI <--> Cache
-    FastAPI -->|REST API| React
-    React --> MUI
-    React --> Charts
-    React --> Browser
-```
-
-### Диаграммы в документации
-
-Каждый документ содержит архитектурные диаграммы:
-
-| Документ | Диаграммы |
-|----------|-----------|
-| [API.md](API.md) | Request Flow |
-| [FRONTEND_ARCH.md](FRONTEND_ARCH.md) | Component Structure, Data Flow, State Machine |
-| [DATABASE.md](DATABASE.md) | ER Diagram, Data Flow, Index Usage |
-| [TESTING.md](TESTING.md) | CI/CD Pipeline |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Decision Tree, Health Check Flow |
-| [DEPLOYMENT.md](../DEPLOYMENT.md) | Docker Architecture |
-| [CONTRIBUTING.md](../CONTRIBUTING.md) | Git Flow, PR Process |
+**Последнее обновление:** 18 марта 2026
+**Версия проекта:** 1.4.8 (индикаторы активных фильтров)
+**Статус:** ✅ Production Ready
 
 ---
 
-## 🎯 Быстрые ссылки
+## 📖 Структура документации
+
+Документация организована по 10 логическим разделам:
+
+| № | Раздел | Описание | Файлов |
+|---|--------|----------|--------|
+| [01](#01-getting-started) | [**Getting Started**](#01-getting-started) | Быстрый старт и развёртывание | 5 |
+| [02](#02-user-guide) | [**User Guide**](#02-user-guide) | Руководство пользователя | 2 |
+| [03](#03-developer-guide) | [**Developer Guide**](#03-developer-guide) | Руководство разработчика | 5 |
+| [04](#04-api-reference) | [**API Reference**](#04-api-reference) | API документация | 1 |
+| [05](#05-architecture) | [**Architecture**](#05-architecture) | Архитектура и анализ | 7 |
+| [06](#06-frontend-map) | [**Frontend Map**](#06-frontend-map) | Карта регионов | 15 |
+| [07](#07-ui-ux) | [**UI/UX**](#07-ui-ux) | Дизайн и доступность | 4 |
+| [08](#08-qa-audit) | [**QA & Audit**](#08-qa-audit) | Тестирование и аудит | 5 |
+| [09](#09-maintenance) | [**Maintenance**](#09-maintenance) | Обслуживание системы | 1 |
+| [10](#10-future-features) | [**Future Features**](#10-future-features) | Будущие функции | 2 |
+
+---
+
+## 01-getting-started
+
+**Назначение:** Быстрый старт и развёртывание проекта
 
 | Документ | Описание |
 |----------|----------|
-| [📡 API](API.md) | Полная документация по API endpoints |
-| [🏗️ Frontend Architecture](FRONTEND_ARCH.md) | Архитектура frontend приложения |
-| [🗄️ Database](DATABASE.md) | Схема БД, индексы, миграции |
-| [🧪 Testing](TESTING.md) | Руководство по тестированию |
-| [🔧 Troubleshooting](TROUBLESHOOTING.md) | Устранение проблем |
-| [🚀 Deployment](../DEPLOYMENT.md) | Развёртывание и Docker |
-| [🤝 Contributing](../CONTRIBUTING.md) | Руководство для разработчиков |
+| [QUICKSTART.md](01-getting-started/QUICKSTART.md) | ⚡ Быстрый старт за 5 минут |
+| [DEPLOY_INSTRUCTION.md](01-getting-started/DEPLOY_INSTRUCTION.md) | Инструкция по развёртыванию |
+| [DEPLOYMENT.md](01-getting-started/DEPLOYMENT.md) | Развёртывание и Docker |
+| [LOCAL_NETWORK_ACCESS.md](01-getting-started/LOCAL_NETWORK_ACCESS.md) | Доступ по локальной сети |
+
+**Для кого:** Новые разработчики, системные администраторы
 
 ---
 
-## 📖 Для кого эта документация
+## 02-user-guide
 
-### Для разработчиков
+**Назначение:** Руководство для пользователей дашборда
 
-- [Contributing Guide](../CONTRIBUTING.md) — начало работы
-- [Frontend Architecture](FRONTEND_ARCH.md) — структура кода
-- [Testing Guide](TESTING.md) — как писать тесты
-- [API Documentation](API.md) — endpoints
+| Документ | Описание |
+|----------|----------|
+| [TROUBLESHOOTING.md](02-user-guide/TROUBLESHOOTING.md) | 🔧 Устранение распространённых проблем |
+| [UPDATE_INSTRUCTION.md](02-user-guide/UPDATE_INSTRUCTION.md) | Инструкция по обновлению |
 
-### Для DevOps
-
-- [Deployment Guide](../DEPLOYMENT.md) — развёртывание
-- [Database Guide](DATABASE.md) — БД и индексы
-- [Troubleshooting](TROUBLESHOOTING.md) — частые проблемы
-
-### Для аналитиков
-
-- [API Documentation](API.md) — как получать данные
-- [Database Guide](DATABASE.md) — схема данных
+**Для кого:** Пользователи дашборда, администраторы
 
 ---
 
-## 🏁 Начало работы
+## 03-developer-guide
 
-### 1. Клонировать репозиторий
+**Назначение:** Руководство для разработчиков
 
-```bash
-git clone <repository-url>
-cd cgm_goszakupki
-```
+| Документ | Описание |
+|----------|----------|
+| [DEVELOPMENT.md](03-developer-guide/DEVELOPMENT.md) | 🛠 Руководство разработчика |
+| [CONTRIBUTING.md](03-developer-guide/CONTRIBUTING.md) | 🤝 Вклад в проект (Git, PR, Code Style) |
+| [TESTING.md](03-developer-guide/TESTING.md) | 🧪 Руководство по тестированию |
+| [POWERSHELL_ENCODING.md](03-developer-guide/POWERSHELL_ENCODING.md) | Настройка UTF-8 кодировки PowerShell |
+| [OPTIMIZATION_PLAN.md](03-developer-guide/OPTIMIZATION_PLAN.md) | 📋 План оптимизации проекта |
 
-### 2. Установить зависимости
-
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-
-# Frontend
-cd frontend
-npm install
-```
-
-### 3. Запустить сервисы
-
-```bash
-# PostgreSQL
-& "C:\Program Files\PostgreSQL\17\bin\pg_ctl.exe" start -D "C:\pg_data"
-
-# Backend
-cd backend
-uvicorn main:app --reload
-
-# Frontend (новый терминал)
-cd frontend
-npm run dev
-```
-
-### 4. Открыть дашборд
-
-http://localhost:5173
+**Для кого:** Разработчики, поддерживающие проект
 
 ---
 
-## 📋 Содержание документации
+## 04-api-reference
 
-### API Documentation
+**Назначение:** Полная документация по API endpoints
 
-- [KPI Endpoints](API.md#kpi-endpoints)
-- [Charts Endpoints](API.md#charts-endpoints)
-- [Filters Endpoints](API.md#filters-endpoints)
-- [Health Check](API.md#health-check)
-- [Коды ошибок](API.md#коды-ошибок)
-- [Примеры запросов](API.md#примеры-запросов)
+| Документ | Описание |
+|----------|----------|
+| [API.md](04-api-reference/API.md) | 📡 API endpoints (KPI, Charts, Filters, Map) |
 
-### Frontend Architecture
-
-- [Обзор технологий](FRONTEND_ARCH.md#обзор-технологий)
-- [Структура проекта](FRONTEND_ARCH.md#структура-проекта)
-- [Компоненты](FRONTEND_ARCH.md#компоненты)
-- [State Management](FRONTEND_ARCH.md#state-management)
-- [API Client](FRONTEND_ARCH.md#api-client)
-- [Стилизация](FRONTEND_ARCH.md#стилизация)
-- [Тестирование](FRONTEND_ARCH.md#тестирование)
-
-### Database
-
-- [Схема данных](DATABASE.md#схема-данных)
-- [Индексы](DATABASE.md#индексы)
-- [Миграции](DATABASE.md#миграции)
-- [Подключение](DATABASE.md#подключение)
-- [Примеры запросов](DATABASE.md#примеры-запросов)
-- [Backup](DATABASE.md#backup-и-восстановление)
-
-### Testing
-
-- [Backend тесты](TESTING.md#backend-тесты)
-- [Frontend тесты](TESTING.md#frontend-тесты)
-- [E2E тесты](TESTING.md#e2e-тесты)
-- [CI/CD интеграция](TESTING.md#ci/cd-интеграция)
-- [Best Practices](TESTING.md#best-practices)
-
-### Troubleshooting
-
-- [Backend проблемы](TROUBLESHOOTING.md#backend-проблемы)
-- [Frontend проблемы](TROUBLESHOOTING.md#frontend-проблемы)
-- [Database проблемы](TROUBLESHOOTING.md#database-проблемы)
-- [Docker проблемы](TROUBLESHOOTING.md#docker-проблемы)
-- [Производительность](TROUBLESHOOTING.md#производительность)
+**Для кого:** Backend разработчики, интеграционные инженеры
 
 ---
 
-## 🛠️ Технологии
+## 05-architecture
 
-### Backend
+**Назначение:** Архитектурный анализ и проектные решения
 
-| Технология | Версия | Назначение |
-|------------|--------|------------|
-| Python | 3.14 | Язык программирования |
-| FastAPI | 0.133+ | Web фреймворк |
-| PostgreSQL | 17+ | База данных |
-| psycopg2 | 2.9+ | PostgreSQL драйвер |
+| Документ | Описание |
+|----------|----------|
+| [PROJECT_ANALYSIS.md](05-architecture/PROJECT_ANALYSIS.md) | 🏛 Архитектурный анализ (92.15/100) |
+| [DATABASE.md](05-architecture/DATABASE.md) | 🗄 Схема БД, индексы, миграции |
+| [FRONTEND_ARCH.md](05-architecture/FRONTEND_ARCH.md) | 🌐 Архитектура frontend приложения |
+| [FRONTEND.md](05-architecture/FRONTEND.md) | 🎨 Frontend документация |
+| [MARCH_2026_UPDATES.md](05-architecture/MARCH_2026_UPDATES.md) | 📅 Отчёт об обновлениях (март 2026) |
+| [OPTIMIZATION_START.md](05-architecture/OPTIMIZATION_START.md) | Начало оптимизации |
+| [backend/REDIS_SETUP.md](05-architecture/backend/REDIS_SETUP.md) | Настройка Redis (архив, не используется) |
 
-### Frontend
-
-| Технология | Версия | Назначение |
-|------------|--------|------------|
-| React | 19+ | UI библиотека |
-| TypeScript | 5+ | Типизация |
-| Material-UI | 7+ | UI компоненты |
-| Recharts | 3+ | Диаграммы |
-| Zustand | 5+ | State management |
+**Для кого:** Архитекторы, senior разработчики
 
 ---
 
-## 📊 Метрики проекта
+## 06-frontend-map
+
+**Назначение:** Документация карты регионов РФ
+
+### Основная документация
+
+| Документ | Описание |
+|----------|----------|
+| [MAP_DASHBOARD.md](06-frontend-map/MAP_DASHBOARD.md) | 🗺️ Карта регионов — описание |
+| [MAP_DIAGNOSTICS.md](06-frontend-map/MAP_DIAGNOSTICS.md) | 🔍 Диагностика карты |
+| [REGION_MAPPING.md](06-frontend-map/REGION_MAPPING.md) | 📍 Маппинг регионов |
+| [REGION_MAPPING_COMPLETE.md](06-frontend-map/REGION_MAPPING_COMPLETE.md) | ✅ Завершение маппинга |
+| [MAP_DASHBOARD_PLAN.md](06-frontend-map/MAP_DASHBOARD_PLAN.md) | 📋 План разработки карты |
+| [MAP_DASHBOARD_STEP1.md](06-frontend-map/MAP_DASHBOARD_STEP1.md) | Шаг 1: Создание компонента |
+| [MAP_DASHBOARD_STEP1_REPORT.md](06-frontend-map/MAP_DASHBOARD_STEP1_REPORT.md) | Отчёт по шагу 1 |
+| [MAP_DASHBOARD_STEP3_REPORT.md](06-frontend-map/MAP_DASHBOARD_STEP3_REPORT.md) | Отчёт по шагу 3 |
+| [FRONTEND_MAP_UX_IMPROVEMENTS.md](06-frontend-map/FRONTEND_MAP_UX_IMPROVEMENTS.md) | 🎨 Улучшения UX карты |
+| [ARCHITECTURE.md](06-frontend-map/ARCHITECTURE.md) | 🏗 Архитектура frontend_map |
+| [DESIGN_REQUIREMENTS.md](06-frontend-map/DESIGN_REQUIREMENTS.md) | 📐 Требования к дизайну |
+| [READY_CHECKLIST.md](06-frontend-map/READY_CHECKLIST.md) | ✅ Чек-лист готовности |
+
+### Интеграция
+
+| Документ | Описание |
+|----------|----------|
+| [integration/INTEGRATION_PLAN.md](06-frontend-map/integration/INTEGRATION_PLAN.md) | План интеграции с backend |
+| [integration/INTEGRATION_COMPLETE.md](06-frontend-map/integration/INTEGRATION_COMPLETE.md) | ✅ Интеграция завершена |
+| [integration/QUICK_INTEGRATION.md](06-frontend-map/integration/QUICK_INTEGRATION.md) | ⚡ Быстрая интеграция |
+
+**Для кого:** Frontend разработчики, GIS специалисты
+
+---
+
+## 07-ui-ux
+
+**Назначение:** Дизайн, UI/UX аудит и улучшения
+
+| Документ | Описание |
+|----------|----------|
+| [UI_UX_AUDIT.md](07-ui-ux/UI_UX_AUDIT.md) | 🎨 UI/UX аудит дашборда (89/100 ⭐) |
+| [UI_UX_IMPROVEMENTS_PLAN.md](07-ui-ux/UI_UX_IMPROVEMENTS_PLAN.md) | 📋 План улучшений UI/UX (v1.4.4) |
+| [FRONTEND_UI_UX_RECOMMENDATIONS.md](07-ui-ux/FRONTEND_UI_UX_RECOMMENDATIONS.md) | Рекомендации по UI/UX |
+| [UI_UX_IMPROVEMENTS_REPORT.md](07-ui-ux/UI_UX_IMPROVEMENTS_REPORT.md) | Отчёт об улучшениях (frontend_map) |
+
+**Для кого:** UI/UX дизайнеры, frontend разработчики
+
+---
+
+## 08-qa-audit
+
+**Назначение:** Тестирование, аудит качества, автоматизация
+
+| Документ | Описание |
+|----------|----------|
+| [QA_AUDIT.md](08-qa-audit/QA_AUDIT.md) | 📊 Полный отчёт о тестировании (97.0% PASS) |
+| [QA_AUDIT_MARCH_16.md](08-qa-audit/QA_AUDIT_MARCH_16.md) | Аудит от 16 марта 2026 |
+| [QA_TEST_REPORT.md](08-qa-audit/QA_TEST_REPORT.md) | Отчёт о тестировании |
+| [AUTOMATION_SUMMARY.md](08-qa-audit/AUTOMATION_SUMMARY.md) | 🛠 Автоматизация проекта |
+| [README.e2e-frontend.md](08-qa-audit/README.e2e-frontend.md) | E2E тесты frontend (из frontend/tests/e2e/) |
+
+**Для кого:** QA инженеры, тестировщики
+
+---
+
+## 09-maintenance
+
+**Назначение:** Обслуживание и поддержка системы
+
+| Документ | Описание |
+|----------|----------|
+| [VACUUM_SETUP.md](09-maintenance/VACUUM_SETUP.md) | 🔄 Настройка авто-VACUUM для БД |
+
+**Для кого:** Системные администраторы, DevOps
+
+---
+
+## 10-future-features
+
+**Назначение:** Будущие функции и улучшения (не входят в текущий объём)
+
+| Документ | Описание |
+|----------|----------|
+| [README.md](10-future-features/README.md) | 📚 Навигатор по будущим функциям |
+| [COMPARISON_DASHBOARD.md](10-future-features/COMPARISON_DASHBOARD.md) | 📊 Дашборд сравнения периодов (отдельная реализация) |
+
+**Для кого:** Архитекторы, senior разработчики, планировщики
+
+---
+
+## 📂 Основная документация в корне проекта
+
+| Документ | Описание |
+|----------|----------|
+| [README.md](../README.md) | 🏠 Главная страница проекта |
+| [CHANGELOG.md](../CHANGELOG.md) | 📝 История изменений |
+
+---
+
+## 🔗 Быстрые ссылки
+
+### Для нового разработчика:
+1. [QUICKSTART.md](01-getting-started/QUICKSTART.md) — быстрый старт
+2. [DEVELOPMENT.md](03-developer-guide/DEVELOPMENT.md) — настройка окружения
+3. [CONTRIBUTING.md](03-developer-guide/CONTRIBUTING.md) — правила разработки
+
+### Для пользователя:
+1. [TROUBLESHOOTING.md](02-user-guide/TROUBLESHOOTING.md) — решение проблем
+2. [UPDATE_INSTRUCTION.md](02-user-guide/UPDATE_INSTRUCTION.md) — обновление
+
+### Для архитектора:
+1. [PROJECT_ANALYSIS.md](05-architecture/PROJECT_ANALYSIS.md) — анализ проекта
+2. [OPTIMIZATION_PLAN.md](03-developer-guide/OPTIMIZATION_PLAN.md) — план оптимизации
+
+### Для QA:
+1. [QA_AUDIT.md](08-qa-audit/QA_AUDIT.md) — отчёт о тестировании
+2. [TESTING.md](03-developer-guide/TESTING.md) — руководство по тестам
+
+### Для frontend разработчика:
+1. [FRONTEND_ARCH.md](05-architecture/FRONTEND_ARCH.md) — архитектура frontend
+2. [MAP_DASHBOARD.md](06-frontend-map/MAP_DASHBOARD.md) — карта регионов
+3. [UI_UX_AUDIT.md](07-ui-ux/UI_UX_AUDIT.md) — UI/UX аудит
+
+### Для backend разработчика:
+1. [API.md](04-api-reference/API.md) — API документация
+2. [DATABASE.md](05-architecture/DATABASE.md) — схема БД
+
+---
+
+## 📊 Статистика документации
 
 | Метрика | Значение |
 |---------|----------|
-| Backend тестов | 45 |
-| Frontend тестов | 37 |
-| E2E сценариев | 19 |
-| Backend coverage | 92% |
-| Frontend coverage | 38% |
-| API endpoints | 13 |
-| Компонентов React | 8 |
+| **Всего документов** | 43 |
+| **Разделов** | 10 |
+| **Основных файлов в корне** | 2 (README, CHANGELOG) |
+| **Последнее обновление** | 18 марта 2026 |
 
 ---
 
-## 🔗 Дополнительные ресурсы
+## 📝 Вклад в документацию
 
-- [GitHub Repository](#)
-- [Swagger UI](http://localhost:8000/docs)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [React Documentation](https://react.dev/)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+При добавлении нового документа:
+1. Выберите соответствующий раздел
+2. Добавьте ссылку в этот навигатор
+3. Обновите счётчик файлов в таблице разделов
 
----
-
-## ❓ Вопросы
-
-Если у вас возникли вопросы:
-
-1. Проверьте [Troubleshooting Guide](TROUBLESHOOTING.md)
-2. Поищите в [issue tracker](#)
-3. Создайте новый issue
+**Соглашения по именованию:**
+- `README.md` — навигатор или введение
+- `*_GUIDE.md` — руководства
+- `*_REFERENCE.md` — справочная информация
+- `*_AUDIT.md` — отчёты аудита
+- `*_PLAN.md` — планы работ
 
 ---
 
-## 📝 Лицензия
-
-Внутренний проект для компании.
-
----
-
-**Последнее обновление:** 5 марта 2026 г.
+**Документация актуальна для версии проекта 1.4.4**
