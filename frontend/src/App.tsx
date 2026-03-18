@@ -31,6 +31,12 @@ const DashboardContent = () => {
     selectedCustomers,
     selectedSuppliers,
     selectedProducts,
+    availableYears,
+    availableMonths,
+    availableRegions,
+    availableCustomers,
+    availableSuppliers,
+    availableProducts,
     setAvailableYears,
     setAvailableMonths,
     setAvailableRegions,
@@ -201,113 +207,127 @@ const DashboardContent = () => {
           <KpiPanel data={kpiData || null} loading={kpiLoading} />
 
           {/* Индикаторы активных фильтров */}
-          {(selectedYears.length > 0 || selectedMonths.length > 0 ||
-            selectedRegions.length > 0 || selectedCustomers.length > 0 ||
-            selectedSuppliers.length > 0 || selectedProducts.length > 0) && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1, color: 'rgba(255,255,255,0.85)' }}>
-                🏷️ Активные фильтры:
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {selectedYears.map(year => (
-                  <Chip
-                    key={year}
-                    label={`Год: ${year}`}
-                    onDelete={() => toggleYear(year)}
-                    sx={{
-                      bgcolor: 'rgba(0, 180, 219, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(0, 180, 219, 0.5)',
-                      '& .MuiChip-deleteIcon': {
+          {/* Показываем только если выбраны НЕ все значения фильтра */}
+          {(() => {
+            // Проверяем, есть ли фильтры где выбраны не все значения
+            const isYearsFiltered = selectedYears.length > 0 && selectedYears.length < availableYears.length;
+            const isMonthsFiltered = selectedMonths.length > 0 && selectedMonths.length < availableMonths.length;
+            const isRegionsFiltered = selectedRegions.length > 0 && selectedRegions.length < availableRegions.length;
+            const isCustomersFiltered = selectedCustomers.length > 0 && selectedCustomers.length < availableCustomers.length;
+            const isSuppliersFiltered = selectedSuppliers.length > 0 && selectedSuppliers.length < availableSuppliers.length;
+            const isProductsFiltered = selectedProducts.length > 0 && selectedProducts.length < availableProducts.length;
+
+            const hasActiveFilters = isYearsFiltered || isMonthsFiltered || isRegionsFiltered || 
+                                     isCustomersFiltered || isSuppliersFiltered || isProductsFiltered;
+
+            if (!hasActiveFilters) return null;
+
+            return (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'rgba(255,255,255,0.85)' }}>
+                  🏷️ Активные фильтры:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {isYearsFiltered && selectedYears.map(year => (
+                    <Chip
+                      key={year}
+                      label={`Год: ${year}`}
+                      onDelete={() => toggleYear(year)}
+                      sx={{
+                        bgcolor: 'rgba(0, 180, 219, 0.3)',
                         color: '#fff',
-                        '&:hover': { color: '#fff' }
-                      }
-                    }}
-                  />
-                ))}
-                {selectedMonths.map(month => (
-                  <Chip
-                    key={month}
-                    label={`Месяц: ${month}`}
-                    onDelete={() => toggleMonth(month)}
-                    sx={{
-                      bgcolor: 'rgba(79, 195, 247, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(79, 195, 247, 0.5)',
-                      '& .MuiChip-deleteIcon': {
+                        border: '1px solid rgba(0, 180, 219, 0.5)',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#fff',
+                          '&:hover': { color: '#fff' }
+                        }
+                      }}
+                    />
+                  ))}
+                  {isMonthsFiltered && selectedMonths.map(month => (
+                    <Chip
+                      key={month}
+                      label={`Месяц: ${month}`}
+                      onDelete={() => toggleMonth(month)}
+                      sx={{
+                        bgcolor: 'rgba(79, 195, 247, 0.3)',
                         color: '#fff',
-                        '&:hover': { color: '#fff' }
-                      }
-                    }}
-                  />
-                ))}
-                {selectedRegions.map(region => (
-                  <Chip
-                    key={region}
-                    label={`Регион: ${region.length > 25 ? region.substring(0, 25) + '...' : region}`}
-                    onDelete={() => toggleRegion(region)}
-                    sx={{
-                      bgcolor: 'rgba(255, 152, 0, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(255, 152, 0, 0.5)',
-                      '& .MuiChip-deleteIcon': {
+                        border: '1px solid rgba(79, 195, 247, 0.5)',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#fff',
+                          '&:hover': { color: '#fff' }
+                        }
+                      }}
+                    />
+                  ))}
+                  {isRegionsFiltered && selectedRegions.map(region => (
+                    <Chip
+                      key={region}
+                      label={`Регион: ${region.length > 25 ? region.substring(0, 25) + '...' : region}`}
+                      onDelete={() => toggleRegion(region)}
+                      sx={{
+                        bgcolor: 'rgba(255, 152, 0, 0.3)',
                         color: '#fff',
-                        '&:hover': { color: '#fff' }
-                      }
-                    }}
-                  />
-                ))}
-                {selectedCustomers.map(customer => (
-                  <Chip
-                    key={customer}
-                    label={`Заказчик: ${customer.length > 25 ? customer.substring(0, 25) + '...' : customer}`}
-                    onDelete={() => toggleCustomer(customer)}
-                    sx={{
-                      bgcolor: 'rgba(76, 175, 80, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(76, 175, 80, 0.5)',
-                      '& .MuiChip-deleteIcon': {
+                        border: '1px solid rgba(255, 152, 0, 0.5)',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#fff',
+                          '&:hover': { color: '#fff' }
+                        }
+                      }}
+                    />
+                  ))}
+                  {isCustomersFiltered && selectedCustomers.map(customer => (
+                    <Chip
+                      key={customer}
+                      label={`Заказчик: ${customer.length > 25 ? customer.substring(0, 25) + '...' : customer}`}
+                      onDelete={() => toggleCustomer(customer)}
+                      sx={{
+                        bgcolor: 'rgba(76, 175, 80, 0.3)',
                         color: '#fff',
-                        '&:hover': { color: '#fff' }
-                      }
-                    }}
-                  />
-                ))}
-                {selectedSuppliers.map(supplier => (
-                  <Chip
-                    key={supplier}
-                    label={`Поставщик: ${supplier.length > 25 ? supplier.substring(0, 25) + '...' : supplier}`}
-                    onDelete={() => toggleSupplier(supplier)}
-                    sx={{
-                      bgcolor: 'rgba(156, 39, 176, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(156, 39, 176, 0.5)',
-                      '& .MuiChip-deleteIcon': {
+                        border: '1px solid rgba(76, 175, 80, 0.5)',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#fff',
+                          '&:hover': { color: '#fff' }
+                        }
+                      }}
+                    />
+                  ))}
+                  {isSuppliersFiltered && selectedSuppliers.map(supplier => (
+                    <Chip
+                      key={supplier}
+                      label={`Поставщик: ${supplier.length > 25 ? supplier.substring(0, 25) + '...' : supplier}`}
+                      onDelete={() => toggleSupplier(supplier)}
+                      sx={{
+                        bgcolor: 'rgba(156, 39, 176, 0.3)',
                         color: '#fff',
-                        '&:hover': { color: '#fff' }
-                      }
-                    }}
-                  />
-                ))}
-                {selectedProducts.map(product => (
-                  <Chip
-                    key={product}
-                    label={`Продукт: ${product.length > 25 ? product.substring(0, 25) + '...' : product}`}
-                    onDelete={() => toggleProduct(product)}
-                    sx={{
-                      bgcolor: 'rgba(233, 30, 99, 0.3)',
-                      color: '#fff',
-                      border: '1px solid rgba(233, 30, 99, 0.5)',
-                      '& .MuiChip-deleteIcon': {
+                        border: '1px solid rgba(156, 39, 176, 0.5)',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#fff',
+                          '&:hover': { color: '#fff' }
+                        }
+                      }}
+                    />
+                  ))}
+                  {isProductsFiltered && selectedProducts.map(product => (
+                    <Chip
+                      key={product}
+                      label={`Продукт: ${product.length > 25 ? product.substring(0, 25) + '...' : product}`}
+                      onDelete={() => toggleProduct(product)}
+                      sx={{
+                        bgcolor: 'rgba(233, 30, 99, 0.3)',
                         color: '#fff',
-                        '&:hover': { color: '#fff' }
-                      }
-                    }}
-                  />
-                ))}
+                        border: '1px solid rgba(233, 30, 99, 0.5)',
+                        '& .MuiChip-deleteIcon': {
+                          color: '#fff',
+                          '&:hover': { color: '#fff' }
+                        }
+                      }}
+                    />
+                  ))}
+                </Box>
               </Box>
-            </Box>
-          )}
+            );
+          })()}
 
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2, mb: 2 }} role="region" aria-label="Диаграммы динамики и регионов">
             <Suspense fallback={<Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2, background: 'rgba(15, 12, 41, 0.95)' }} />}>
