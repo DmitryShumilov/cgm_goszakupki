@@ -60,9 +60,6 @@ function App() {
       filtered = filtered.filter(r => selectedRegions.includes(r.region));
     }
 
-    // В прототипе фильтрация по годам/поставщикам/продуктам не влияет на данные
-    // так как в mockData нет этих полей. В будущем будет реальная фильтрация из БД.
-
     setDisplayedRegionData(filtered);
   }, [regionData, selectedYears, selectedRegions, selectedSuppliers, selectedProducts]);
 
