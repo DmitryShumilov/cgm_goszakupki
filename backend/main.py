@@ -1125,6 +1125,424 @@ async def get_region_categories(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================================
+# Утилиты для сравнения периодов
+# ============================================================================
+
+def calculate_change(period_a_value: float, period_b_value: float) -> Dict[str, Any]:
+    """
+    Расчёт изменений между периодами
+    
+    Возвращает:
+    {
+      "absolute": float,      # Абсолютное изменение
+      "percent": float,       # Процентное изменение
+      "trend": str            # "growth", "decline", "stable"
+    }
+    """
+    absolute = period_b_value - period_a_value
+    
+    if period_a_value != 0:
+        percent = ((period_b_value - period_a_value) / period_a_value) * 100
+    else:
+        percent = 0.0 if period_b_value == 0 else 100.0
+    
+    # Определение тренда
+    if percent > 5:
+        trend = "growth"
+    elif percent < -5:
+        trend = "decline"
+    else:
+        trend = "stable"
+    
+    return {
+        "absolute": round(absolute, 2),
+        "percent": round(percent, 2),
+        "trend": trend
+    }
+
+
+async def get_kpi_data(filters: FilterParams) -> Dict[str, Any]:
+    """Получение KPI данных (аналогично основному endpoint)"""
+    filter_dict = filters.model_dump() if hasattr(filters, 'model_dump') else {}
+    where_clause, params = build_filter_clause(filter_dict)
+    
+    with get_db_cursor() as cur:
+        query = f"""
+        SELECT
+            COALESCE(SUM(amount_rub), 0) as total_amount,
+            COUNT(*) as contract_count,
+            COALESCE(AVG(amount_rub), 0) as avg_contract_amount,
+            COALESCE(SUM(quantity), 0) as total_quantity,
+            CASE
+                WHEN COALESCE(SUM(quantity), 0) = 0 THEN 0
+                ELSE COALESCE(SUM(amount_rub), 0) / SUM(quantity)
+            END as avg_price_per_unit,
+            COUNT(DISTINCT customer_name) as customer_count
+        FROM purchases
+        {where_clause}
+        """
+        
+        cur.execute(query, params)
+        result = cur.fetchone()
+        
+        return {
+            "total_amount": float(result['total_amount']),
+            "contract_count": int(result['contract_count']),
+            "avg_contract_amount": float(result['avg_contract_amount']),
+            "total_quantity": float(result['total_quantity']),
+            "avg_price_per_unit": float(result['avg_price_per_unit']),
+            "customer_count": int(result['customer_count'])
+        }
+
+
+async def get_dynamics_data(filters: FilterParams) -> Dict[str, Any]:
+    """Получение данных динамики (аналогично основному endpoint)"""
+    filter_dict = filters.model_dump() if hasattr(filters, 'model_dump') else {}
+    where_clause, params = build_filter_clause(filter_dict)
+    
+    with get_db_cursor() as cur:
+        query = f"""
+        SELECT
+            purchase_month,
+            SUM(amount_rub) as amount,
+            SUM(quantity) as quantity
+        FROM purchases
+        {where_clause}
+        GROUP BY purchase_month
+        ORDER BY purchase_month
+        """
+        
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        return {
+            "labels": [r['purchase_month'] for r in results],
+            "amounts": [float(r['amount']) for r in results],
+            "quantities": [float(r['quantity']) if r['quantity'] else 0 for r in results]
+        }
+
+
+async def get_regions_data(filters: FilterParams) -> Dict[str, Any]:
+    """Получение данных по регионам"""
+    filter_dict = filters.model_dump() if hasattr(filters, 'model_dump') else {}
+    where_clause, params = build_filter_clause(filter_dict)
+    
+    with get_db_cursor() as cur:
+        query = f"""
+        SELECT
+            region,
+            SUM(amount_rub) as amount,
+            COUNT(*) as count
+        FROM purchases
+        {where_clause}
+        GROUP BY region
+        ORDER BY amount DESC
+        LIMIT 10
+        """
+        
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        return {
+            "labels": [r['region'] for r in results],
+            "amounts": [float(r['amount']) for r in results],
+            "counts": [int(r['count']) for r in results]
+        }
+
+
+async def get_suppliers_detailed(filters: FilterParams) -> List[Dict[str, Any]]:
+    """Получение детальных данных по поставщикам"""
+    filter_dict = filters.model_dump() if hasattr(filters, 'model_dump') else {}
+    where_clause, params = build_filter_clause(filter_dict)
+    
+    with get_db_cursor() as cur:
+        query = f"""
+        SELECT
+            distributor,
+            SUM(amount_rub) as amount
+        FROM purchases
+        {where_clause}
+        GROUP BY distributor
+        ORDER BY amount DESC
+        """
+        
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        return [{'supplier': r['distributor'], 'amount': float(r['amount'])} for r in results]
+
+
+def merge_suppliers(suppliers_a: List[Dict], suppliers_b: List[Dict]) -> List[Dict[str, Any]]:
+    """Объединение данных по поставщикам для scatter plot"""
+    suppliers_dict = {}
+    
+    for s in suppliers_a:
+        suppliers_dict[s['supplier']] = {'supplier': s['supplier'], 'periodA': s['amount'], 'periodB': 0}
+    
+    for s in suppliers_b:
+        if s['supplier'] in suppliers_dict:
+            suppliers_dict[s['supplier']]['periodB'] = s['amount']
+        else:
+            suppliers_dict[s['supplier']] = {'supplier': s['supplier'], 'periodA': 0, 'periodB': s['amount']}
+    
+    return list(suppliers_dict.values())
+
+
+async def get_region_table_data(filters: FilterParams) -> Dict[str, Dict[str, Any]]:
+    """Получение данных по регионам для таблицы"""
+    filter_dict = filters.model_dump() if hasattr(filters, 'model_dump') else {}
+    where_clause, params = build_filter_clause(filter_dict)
+    
+    with get_db_cursor() as cur:
+        query = f"""
+        SELECT
+            region,
+            SUM(amount_rub) as amount,
+            COUNT(*) as count
+        FROM purchases
+        {where_clause}
+        GROUP BY region
+        """
+        
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        return {
+            r['region']: {'amount': float(r['amount']), 'count': int(r['count'])}
+            for r in results
+        }
+
+
+# ============================================================================
+# API Endpoints - Comparison (Сравнение периодов)
+# ============================================================================
+
+@app.post("/api/compare/kpi")
+@limiter.limit("60/minute")
+async def compare_kpi(
+    request: Request,
+    periodA: Annotated[FilterParams, Body()],
+    periodB: Annotated[FilterParams, Body()]
+):
+    """
+    Сравнение KPI двух периодов
+    
+    Возвращает:
+    {
+      "periodA": { total_amount, contract_count, ... },
+      "periodB": { total_amount, contract_count, ... },
+      "changes": {
+        "total_amount": { absolute: ..., percent: ..., trend: "growth" },
+        ...
+      }
+    }
+    """
+    logger.info("Comparing KPI for two periods")
+    
+    # Получаем KPI для периода А
+    kpi_a = await get_kpi_data(periodA)
+    
+    # Получаем KPI для периода Б
+    kpi_b = await get_kpi_data(periodB)
+    
+    # Рассчитываем изменения
+    changes = {
+        "total_amount": calculate_change(kpi_a["total_amount"], kpi_b["total_amount"]),
+        "contract_count": calculate_change(kpi_a["contract_count"], kpi_b["contract_count"]),
+        "avg_contract_amount": calculate_change(kpi_a["avg_contract_amount"], kpi_b["avg_contract_amount"]),
+        "total_quantity": calculate_change(kpi_a["total_quantity"], kpi_b["total_quantity"]),
+        "avg_price_per_unit": calculate_change(kpi_a["avg_price_per_unit"], kpi_b["avg_price_per_unit"])
+    }
+    
+    return {
+        "periodA": kpi_a,
+        "periodB": kpi_b,
+        "changes": changes
+    }
+
+
+@app.post("/api/compare/dynamics")
+@limiter.limit("60/minute")
+async def compare_dynamics(
+    request: Request,
+    periodA: Annotated[FilterParams, Body()],
+    periodB: Annotated[FilterParams, Body()]
+):
+    """
+    Сравнение динамики закупок по месяцам
+
+    Возвращает:
+    {
+      "labels": ["2024-01", "2024-02", ...],
+      "periodA": { "amounts": [...], "quantities": [...] },
+      "periodB": { "amounts": [...], "quantities": [...] }
+    }
+    """
+    logger.info("Comparing dynamics for two periods")
+
+    dynamics_a = await get_dynamics_data(periodA)
+    dynamics_b = await get_dynamics_data(periodB)
+
+    # Объединяем все метки из обоих периодов (сортировка по месяцам)
+    all_labels = sorted(set(dynamics_a["labels"] + dynamics_b["labels"]))
+
+    # Создаём словари для быстрого поиска
+    amounts_a_dict = {label: amount for label, amount in zip(dynamics_a["labels"], dynamics_a["amounts"])}
+    quantities_a_dict = {label: qty for label, qty in zip(dynamics_a["labels"], dynamics_a["quantities"])}
+    amounts_b_dict = {label: amount for label, amount in zip(dynamics_b["labels"], dynamics_b["amounts"])}
+    quantities_b_dict = {label: qty for label, qty in zip(dynamics_b["labels"], dynamics_b["quantities"])}
+
+    # Заполняем данные для всех меток (0 если нет данных)
+    amounts_a = [amounts_a_dict.get(label, 0) for label in all_labels]
+    quantities_a = [quantities_a_dict.get(label, 0) for label in all_labels]
+    amounts_b = [amounts_b_dict.get(label, 0) for label in all_labels]
+    quantities_b = [quantities_b_dict.get(label, 0) for label in all_labels]
+
+    return {
+        "labels": all_labels,
+        "periodA": {
+            "amounts": amounts_a,
+            "quantities": quantities_a
+        },
+        "periodB": {
+            "amounts": amounts_b,
+            "quantities": quantities_b
+        }
+    }
+
+
+@app.post("/api/compare/regions")
+@limiter.limit("60/minute")
+async def compare_regions(
+    request: Request,
+    periodA: Annotated[FilterParams, Body()],
+    periodB: Annotated[FilterParams, Body()]
+):
+    """
+    Сравнение топ-10 регионов
+
+    Возвращает:
+    {
+      "labels": ["Москва", "СПб", ...],
+      "periodA": { "amounts": [...], "counts": [...] },
+      "periodB": { "amounts": [...], "counts": [...] }
+    }
+    """
+    logger.info("Comparing regions for two periods")
+
+    regions_a = await get_regions_data(periodA)
+    regions_b = await get_regions_data(periodB)
+
+    # Объединяем все регионы из обоих периодов
+    all_regions = sorted(set(regions_a["labels"] + regions_b["labels"]))
+
+    # Создаём словари для быстрого поиска
+    amounts_a_dict = {label: amount for label, amount in zip(regions_a["labels"], regions_a["amounts"])}
+    counts_a_dict = {label: count for label, count in zip(regions_a["labels"], regions_a["counts"])}
+    amounts_b_dict = {label: amount for label, amount in zip(regions_b["labels"], regions_b["amounts"])}
+    counts_b_dict = {label: count for label, count in zip(regions_b["labels"], regions_b["counts"])}
+
+    # Заполняем данные для всех регионов (0 если нет данных)
+    amounts_a = [amounts_a_dict.get(region, 0) for region in all_regions]
+    counts_a = [counts_a_dict.get(region, 0) for region in all_regions]
+    amounts_b = [amounts_b_dict.get(region, 0) for region in all_regions]
+    counts_b = [counts_b_dict.get(region, 0) for region in all_regions]
+
+    return {
+        "labels": all_regions,
+        "periodA": { "amounts": amounts_a, "counts": counts_a },
+        "periodB": { "amounts": amounts_b, "counts": counts_b }
+    }
+
+
+@app.post("/api/compare/suppliers")
+@limiter.limit("60/minute")
+async def compare_suppliers(
+    request: Request,
+    periodA: Annotated[FilterParams, Body()],
+    periodB: Annotated[FilterParams, Body()]
+):
+    """
+    Данные для scatter plot поставщиков
+    
+    Возвращает:
+    {
+      "points": [
+        { "supplier": "ООО Фармстандарт", "periodA": 500000000, "periodB": 750000000 },
+        ...
+      ]
+    }
+    """
+    logger.info("Comparing suppliers for two periods")
+    
+    suppliers_a = await get_suppliers_detailed(periodA)
+    suppliers_b = await get_suppliers_detailed(periodB)
+    
+    # Объединяем по поставщикам
+    points = merge_suppliers(suppliers_a, suppliers_b)
+    
+    return { "points": points }
+
+
+@app.post("/api/compare/table")
+@limiter.limit("60/minute")
+async def compare_table(
+    request: Request,
+    periodA: Annotated[FilterParams, Body()],
+    periodB: Annotated[FilterParams, Body()]
+):
+    """
+    Детальная таблица сравнения по регионам
+    
+    Возвращает:
+    {
+      "rows": [
+        {
+          "region": "Москва",
+          "periodA_amount": 1250000000,
+          "periodB_amount": 1890000000,
+          "absoluteDiff": 640000000,
+          "percentDiff": 51.2,
+          "trend": "growth"
+        },
+        ...
+      ]
+    }
+    """
+    logger.info("Generating comparison table")
+    
+    # Получаем данные для обоих периодов
+    table_a = await get_region_table_data(periodA)
+    table_b = await get_region_table_data(periodB)
+    
+    # Объединяем и рассчитываем изменения
+    rows = []
+    all_regions = set(table_a.keys()) | set(table_b.keys())
+    
+    for region in all_regions:
+        a_data = table_a.get(region, {'amount': 0, 'count': 0})
+        b_data = table_b.get(region, {'amount': 0, 'count': 0})
+        
+        change = calculate_change(a_data['amount'], b_data['amount'])
+        
+        rows.append({
+            'region': region,
+            'periodA_amount': a_data['amount'],
+            'periodB_amount': b_data['amount'],
+            'periodA_count': a_data['count'],
+            'periodB_count': b_data['count'],
+            'absoluteDiff': change['absolute'],
+            'percentDiff': change['percent'],
+            'trend': change['trend']
+        })
+    
+    # Сортировка по абсолютному изменению
+    rows.sort(key=lambda x: abs(x['absoluteDiff']), reverse=True)
+    
+    return {'rows': rows}
+
+
 @app.get("/")
 @limiter.limit("30/minute")
 def root(request: Request):
@@ -1132,7 +1550,8 @@ def root(request: Request):
     return {
         "message": "CGM Dashboard API",
         "docs": "/docs",
-        "health": "/api/health"
+        "health": "/api/health",
+        "compare": "/api/compare/kpi (POST)"
     }
 
 

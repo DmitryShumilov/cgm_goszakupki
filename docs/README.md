@@ -2,10 +2,12 @@
 
 **Навигатор по документации проекта**
 
-**Последнее обновление:** 18 марта 2026
-**Версия проекта:** 1.4.8 (Glassmorphism 2.0)
+**Последнее обновление:** 19 марта 2026 🆕
+**Версия проекта:** 1.5.0 (Comparison Dashboard) 🆕
 **Статус:** ✅ Production Ready
+**Оценка QA:** 98.5% PASS (236/236 тестов) 🆕
 **Оценка UI/UX:** 92/100 ⭐
+**Code Review:** 89/100 ✅ 🆕
 
 ---
 
@@ -18,13 +20,15 @@
 | [01](#01-getting-started) | [**Getting Started**](#01-getting-started) | Быстрый старт и развёртывание | 5 |
 | [02](#02-user-guide) | [**User Guide**](#02-user-guide) | Руководство пользователя | 2 |
 | [03](#03-developer-guide) | [**Developer Guide**](#03-developer-guide) | Руководство разработчика | 5 |
-| [04](#04-api-reference) | [**API Reference**](#04-api-reference) | API документация | 1 |
+| [04](#04-api-reference) | [**API Reference**](#04-api-reference) | API документация | 2 🆕 |
 | [05](#05-architecture) | [**Architecture**](#05-architecture) | Архитектура и анализ | 7 |
 | [06](#06-frontend-map) | [**Frontend Map**](#06-frontend-map) | Карта регионов | 15 |
 | [07](#07-ui-ux) | [**UI/UX**](#07-ui-ux) | Дизайн и доступность | 4 |
-| [08](#08-qa-audit) | [**QA & Audit**](#08-qa-audit) | Тестирование и аудит | 5 |
+| [08](#08-qa-audit) | [**QA & Audit**](#08-qa-audit) | Тестирование и аудит | 7 🆕 |
 | [09](#09-maintenance) | [**Maintenance**](#09-maintenance) | Обслуживание системы | 1 |
 | [10](#10-future-features) | [**Future Features**](#10-future-features) | Будущие функции | 2 |
+
+**Итого:** 50 документов в 10 разделах 🆕
 
 ---
 
@@ -79,6 +83,7 @@
 | Документ | Описание |
 |----------|----------|
 | [API.md](04-api-reference/API.md) | 📡 API endpoints (KPI, Charts, Filters, Map) |
+| [COMPARE_API.md](04-api-reference/COMPARE_API.md) | 🆕 Comparison Dashboard API (5 endpoints) |
 
 **Для кого:** Backend разработчики, интеграционные инженеры
 
@@ -156,12 +161,14 @@
 
 | Документ | Описание |
 |----------|----------|
-| [QA_AUDIT.md](08-qa-audit/QA_AUDIT.md) | 📊 Полный отчёт о тестировании (97.0% PASS) |
+| [QA_AUDIT_MARCH_19.md](08-qa-audit/QA_AUDIT_MARCH_19.md) | 📊 **Полный аудит 19 марта 2026** (98.5% PASS, 236/236 тестов) 🆕 |
+| [QA_AUDIT.md](08-qa-audit/QA_AUDIT.md) | 📊 Полный отчёт о тестировании (обновлён 19 марта) 🆕 |
 | [QA_AUDIT_MARCH_16.md](08-qa-audit/QA_AUDIT_MARCH_16.md) | Аудит от 16 марта 2026 |
 | [QA_TEST_REPORT.md](08-qa-audit/QA_TEST_REPORT.md) | Отчёт о тестировании |
 | [AUTOMATION_SUMMARY.md](08-qa-audit/AUTOMATION_SUMMARY.md) | 🛠 Автоматизация проекта |
 | [README.e2e-frontend.md](08-qa-audit/README.e2e-frontend.md) | E2E тесты frontend (из frontend/tests/e2e/) |
-| [CODE_REVIEW_1.4.8.md](08-qa-audit/CODE_REVIEW_1.4.8.md) | 🔍 Code review & security audit (v1.4.8) 🆕 |
+| [CODE_REVIEW_1.4.8.md](08-qa-audit/CODE_REVIEW_1.4.8.md) | 🔍 Code review & security audit (v1.4.8) |
+| [CODE_REVIEW_SUMMARY.md](08-qa-audit/CODE_REVIEW_SUMMARY.md) | 🆕 Code Review Summary (Comparison Dashboard) |
 
 **Для кого:** QA инженеры, тестировщики, security специалисты
 
@@ -236,14 +243,16 @@
 
 | Метрика | Значение |
 |---------|----------|
-| **Всего документов** | 46 |
+| **Всего документов** | 50 🆕 |
 | **Разделов** | 10 |
 | **Основных файлов в корне** | 2 (README, CHANGELOG) |
 | **Release Notes** | 1 (RELEASE_NOTES_1.4.8.md) |
-| **Code Review** | 1 (CODE_REVIEW_1.4.8.md) 🆕 |
-| **Последнее обновление** | 18 марта 2026 |
+| **Code Review** | 2 (CODE_REVIEW_1.4.8.md, CODE_REVIEW_SUMMARY.md) 🆕 |
+| **Последнее обновление** | 19 марта 2026 |
 
 ---
+
+**Документация актуальна для версии проекта 1.5.0 (Comparison Dashboard)** 🆕
 
 ## 📝 Вклад в документацию
 
