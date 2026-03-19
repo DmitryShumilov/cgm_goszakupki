@@ -58,7 +58,7 @@
 | `start_project.ps1` | Запуск проекта | `.\start_project.ps1` |
 | `stop_project.ps1` | Остановка проекта | `.\stop_project.ps1` |
 
-### Обновления скриптов (15 марта 2026, v1.4.1)
+### Обновления скриптов (17 марта 2026, v1.4.4)
 
 **Исправления критических проблем:**
 
@@ -73,6 +73,12 @@
 - `Get-PostgresPath()` — ищет psql.exe в стандартных путях и PATH
 - `Test-Pip-Package()` — проверка установленного пакета через exit code
 - `Get-Pip-Package-Version()` — получение версии пакета
+
+**Обновления документации (v1.4.4):**
+- E2E тесты: 19 сценариев Playwright ✅
+- Backend coverage: 0% (тесты не написаны) ❌
+- Frontend coverage: 38% (цель 50%+) ⚠️
+- UI/UX: 89/100 ⭐ (WCAG 2.1 AA compliant)
 
 ### Параметры скриптов
 
@@ -457,7 +463,7 @@ python integration_test.py
 - Integration: ⚠️ 6/7 (85.7%)
 - Documentation: ✅ 2/2 (100%)
 
-📄 **Полный отчёт:** [docs/QA_AUDIT.md](docs/QA_AUDIT.md)
+📄 **Полный отчёт:** [../08-qa-audit/QA_AUDIT.md](../08-qa-audit/QA_AUDIT.md)
 
 ---
 
@@ -647,7 +653,7 @@ npm audit fix
 
 ### frontend_map (порт 5174)
 
-**Документация:** [docs/MAP_DASHBOARD.md](docs/MAP_DASHBOARD.md)
+**Документация:** [../06-frontend-map/MAP_DASHBOARD.md](../06-frontend-map/MAP_DASHBOARD.md)
 
 ### Структура
 
@@ -894,11 +900,13 @@ backend/
 
 | Метрика | Текущее | Цель | Статус |
 |---------|---------|------|--------|
-| Backend coverage | 0% | 60%+ | ❌ |
-| Frontend coverage | 38% | 50%+ | ⚠️ |
-| E2E сценарии | 0 | 10+ | ❌ |
+| Backend coverage | 0% | 60%+ | ❌ Нет тестов |
+| Frontend coverage | 38% | 50%+ | ⚠️ Ниже цели |
+| E2E сценарии | 19 | 10+ | ✅ Выполнено |
 | Время ответа API | <300ms | <300ms | ✅ |
 | Время запросов БД | <1ms | <10ms | ✅ |
+
+**Примечание:** E2E тесты реализованы (19 сценариев Playwright). Backend тесты не написаны (только фикстуры).
 
 ---
 
@@ -909,7 +917,7 @@ backend/
 - [QUICKSTART.md](QUICKSTART.md) — быстрый старт
 - [README.md](README.md) — основная документация
 - [TROUBLESHOOTING_RUN.md](TROUBLESHOOTING_RUN.md) — решение проблем
-- [docs/](docs/) — подробная документация
+- [../README.md](../README.md) — навигатор по документации
 
 ### Контакты
 

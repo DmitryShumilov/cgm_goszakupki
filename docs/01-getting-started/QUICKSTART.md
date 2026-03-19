@@ -26,7 +26,7 @@
 
 3. Сохраните и перезапустите PowerShell
 
-📖 **Подробно:** [docs/POWERSHELL_ENCODING.md](docs/POWERSHELL_ENCODING.md)
+📖 **Подробно:** [../03-developer-guide/POWERSHELL_ENCODING.md](../03-developer-guide/POWERSHELL_ENCODING.md)
 
 ---
 
@@ -239,7 +239,7 @@ POSTGRES_PASSWORD=правильный_пароль
 
 ## 🎯 Следующие шаги
 
-- 📖 [Основная документация](README.md) — подробное описание проекта
-- 📚 [API документация](docs/API.md) — описание endpoints
-- 🗄 [База данных](docs/DATABASE.md) — схема БД и миграции
-- 🧪 [Тестирование](docs/TESTING.md) — руководство по тестам
+- 📖 [Основная документация](../../README.md) — подробное описание проекта
+- 📚 [API документация](../04-api-reference/API.md) — описание endpoints
+- 🗄 [База данных](../05-architecture/DATABASE.md) — схема БД и миграции
+- 🧪 [Тестирование](../03-developer-guide/TESTING.md) — руководство по тестам

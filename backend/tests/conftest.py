@@ -17,8 +17,13 @@ from main import app, cache
 @pytest.fixture
 def client():
     """Создаёт тестовый клиент FastAPI"""
-    # Отключаем shutdown handler для тестов
-    with patch('main.connection_pool', None):
+    # Мок connection_pool для тестов
+    mock_pool = MagicMock()
+    mock_pool.getconn = MagicMock()
+    mock_pool.putconn = MagicMock()
+    mock_pool.closeall = MagicMock()
+    
+    with patch('main.connection_pool', mock_pool):
         with TestClient(app) as client:
             yield client
 
@@ -43,6 +48,7 @@ def mock_db_with_data():
         mock_cursor = MagicMock()
         mock_cursor.fetchall.return_value = []
         mock_cursor.fetchone.return_value = {}
+        # RealDictCursor возвращает словари, поэтому mock должен тоже
         mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
         mock_cursor.__exit__ = MagicMock(return_value=False)
         mock_get_cursor.return_value = mock_cursor

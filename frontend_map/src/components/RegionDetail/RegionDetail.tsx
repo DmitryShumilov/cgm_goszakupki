@@ -6,6 +6,7 @@ import { InfoSection } from '../ui/InfoSection';
 import { Button, Box, List, ListItem, ListItemText, Skeleton } from '@mui/material';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { BarChart, Bar, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
+import { useFilterStore } from '../../stores/filterStore';
 
 interface RegionDetailProps {
   region: string;
@@ -26,12 +27,15 @@ const CHART_COLORS = [
   '#9c27b0', // Фиолетовый
 ];
 
-export const RegionDetail: React.FC<RegionDetailProps> = ({ 
-  region, 
-  data, 
-  onClose, 
-  isLoading = false 
+export const RegionDetail: React.FC<RegionDetailProps> = ({
+  region,
+  data,
+  onClose,
+  isLoading = false
 }) => {
+  // Получаем фильтры из store
+  const { selectedYears, selectedSuppliers, selectedProducts } = useFilterStore();
+
   // Состояния для детализации
   const [suppliers, setSuppliers] = useState<SupplierData[]>([]);
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -59,22 +63,31 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
     return `${((value / total) * 100).toFixed(1)}%`;
   };
 
-  // Загрузка детализации при открытии региона
+  // Загрузка детализации при открытии региона и при изменении фильтров
   useEffect(() => {
     if (!region) return;
-    
+
     const loadDetail = async () => {
       setDetailLoading(true);
       try {
+        // Формируем параметры для запроса с учётом фильтров
+        const apiParams = {
+          limit: 5,
+          ...(selectedYears.length > 0 && { years: selectedYears }),
+          ...(selectedSuppliers.length > 0 && { suppliers: selectedSuppliers }),
+          ...(selectedProducts.length > 0 && { products: selectedProducts }),
+        };
+
         const [suppliersData, categoriesData] = await Promise.all([
-          mapApi.getRegionSuppliers(region, { limit: 5 }),
-          mapApi.getRegionCategories(region, { limit: 7 })
+          mapApi.getRegionSuppliers(region, apiParams),
+          mapApi.getRegionCategories(region, apiParams)
         ]);
         setSuppliers(suppliersData);
         setCategories(categoriesData);
         console.log('✅ Region detail loaded:', {
           suppliers: suppliersData.length,
-          categories: categoriesData.length
+          categories: categoriesData.length,
+          filters: apiParams
         });
       } catch (error) {
         console.error('❌ Error loading region detail:', error);
@@ -84,7 +97,7 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
     };
 
     loadDetail();
-  }, [region]);
+  }, [region, selectedYears, selectedSuppliers, selectedProducts]);
 
   const handleExport = () => {
     if (!data) return;
@@ -94,7 +107,7 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
       ['Регион', region],
       ['Общая сумма', data.sum],
       ['Количество контрактов', data.count],
-      ['Средний контракт', data.count > 0 ? data.sum / data.count : 0],
+      ['Средняя сумма контракта', data.count > 0 ? data.sum / data.count : 0],
       ['Объём (шт)', data.quantity],
       ['Дата экспорта', new Date().toISOString().split('T')[0]],
     ].map(row => row.join(',')).join('\n');
@@ -184,7 +197,7 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
                 tooltip="Количество заключённых контрактов"
               />
               <KpiCard
-                label="Средний контракт"
+                label="Средняя сумма контракта"
                 value={data && data.count > 0 ? formatMoney(data.sum / data.count) : '—'}
                 tooltip="Рассчитывается как: Общая сумма / Количество контрактов"
               />
@@ -299,7 +312,8 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
                     tickLine={false}
                   />
                   <RechartsTooltip
-                    formatter={(value) => formatMoney(Number(value))}
+                    formatter={(value) => [formatMoney(Number(value)), 'Сумма']}
+                    labelFormatter={(label) => `Продукт: ${label}`}
                     contentStyle={{
                       background: 'rgba(15, 12, 41, 0.95)',
                       backdropFilter: 'blur(20px)',
@@ -312,16 +326,45 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
                   />
                   <Bar
                     dataKey="value"
-                    radius={[0, 4, 4, 0]}
-                    barSize={24}
-                    animationDuration={600}
+                    radius={[0, 6, 6, 0]}
+                    barSize={28}
+                    animationDuration={800}
                   >
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={entry.color}
+                        stroke={entry.color}
+                        strokeWidth={1}
+                        style={{
+                          filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                          transition: 'all 0.3s ease',
+                        }}
                       />
                     ))}
+                    <defs>
+                      {chartData.map((entry, index) => (
+                        <linearGradient
+                          key={`gradient-${index}`}
+                          id={`gradient-${index}`}
+                          x1="0"
+                          y1="0"
+                          x2="1"
+                          y2="0"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor={entry.color}
+                            stopOpacity={0.9}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor={entry.color}
+                            stopOpacity={0.5}
+                          />
+                        </linearGradient>
+                      ))}
+                    </defs>
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -335,32 +378,42 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 'var(--space-2)',
+                      gap: '12px',
                       cursor: 'default',
-                      transition: 'background var(--duration-fast) var(--ease-out)',
-                      padding: 'var(--space-1) var(--space-2)',
-                      borderRadius: 'var(--radius-sm)',
+                      transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                      padding: 'var(--space-2) var(--space-3)',
+                      borderRadius: 'var(--radius-lg)',
+                      border: '1px solid transparent',
                       '&:hover': {
-                        background: 'rgba(255, 255, 255, 0.05)'
+                        background: 'rgba(51, 136, 255, 0.15)',
+                        borderColor: 'rgba(51, 136, 255, 0.3)',
+                        transform: 'translateX(6px)',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3), 0 0 16px rgba(51, 136, 255, 0.2)'
                       }
                     }}
                   >
                     <Box
                       className="legend-color"
                       sx={{
-                        width: '14px',
-                        height: '14px',
-                        borderRadius: 'var(--radius-sm)',
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: 'var(--radius-md)',
                         flexShrink: 0,
                         backgroundColor: entry.color,
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                        border: '2px solid rgba(255, 255, 255, 0.4)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(51, 136, 255, 0.3)',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'scale(1.15)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(51, 136, 255, 0.5)'
+                        }
                       }}
                     />
                     <Box
                       className="legend-label"
                       sx={{
                         flex: 1,
-                        fontSize: '11px',
+                        fontSize: '12px',
                         color: 'rgba(255, 255, 255, 0.82) !important',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -377,7 +430,8 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
                         fontWeight: 600,
                         color: 'var(--accent-secondary) !important',
                         whiteSpace: 'nowrap',
-                        fontVariantNumeric: 'tabular-nums'
+                        fontVariantNumeric: 'tabular-nums',
+                        textShadow: '0 0 12px rgba(79, 195, 247, 0.3)'
                       }}
                     >
                       {formatMoney(entry.value)}
@@ -388,7 +442,10 @@ export const RegionDetail: React.FC<RegionDetailProps> = ({
                         fontSize: '10px',
                         color: 'rgba(255, 255, 255, 0.5)',
                         ml: 'var(--space-1)',
-                        fontWeight: 500
+                        fontWeight: 500,
+                        background: 'rgba(51, 136, 255, 0.15)',
+                        padding: '2px 6px',
+                        borderRadius: '4px'
                       }}
                     >
                       ({entry.percentage})

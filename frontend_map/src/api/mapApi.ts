@@ -110,18 +110,24 @@ export const mapApi = {
   // Топ поставщиков региона
   getRegionSuppliers: async (
     region: string,
-    params?: { years?: number[]; limit?: number }
+    params?: { years?: number[]; suppliers?: string[]; products?: string[]; limit?: number }
   ): Promise<SupplierData[]> => {
     try {
       const formattedParams: Record<string, string> = {};
-      
+
       if (params?.years && params.years.length > 0) {
         formattedParams.years = params.years.join(',');
+      }
+      if (params?.suppliers && params.suppliers.length > 0) {
+        formattedParams.suppliers = params.suppliers.join(',');
+      }
+      if (params?.products && params.products.length > 0) {
+        formattedParams.products = params.products.join(',');
       }
       if (params?.limit) {
         formattedParams.limit = params.limit.toString();
       }
-      
+
       const response = await apiClient.get<SupplierData[]>(
         `/api/map/regions/${encodeURIComponent(region)}/suppliers`,
         { params: formattedParams }
@@ -136,18 +142,24 @@ export const mapApi = {
   // Категории продуктов региона
   getRegionCategories: async (
     region: string,
-    params?: { years?: number[]; limit?: number }
+    params?: { years?: number[]; suppliers?: string[]; products?: string[]; limit?: number }
   ): Promise<CategoryData[]> => {
     try {
       const formattedParams: Record<string, string> = {};
-      
+
       if (params?.years && params.years.length > 0) {
         formattedParams.years = params.years.join(',');
+      }
+      if (params?.suppliers && params.suppliers.length > 0) {
+        formattedParams.suppliers = params.suppliers.join(',');
+      }
+      if (params?.products && params.products.length > 0) {
+        formattedParams.products = params.products.join(',');
       }
       if (params?.limit) {
         formattedParams.limit = params.limit.toString();
       }
-      
+
       const response = await apiClient.get<CategoryData[]>(
         `/api/map/regions/${encodeURIComponent(region)}/categories`,
         { params: formattedParams }

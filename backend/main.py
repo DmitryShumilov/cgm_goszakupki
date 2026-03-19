@@ -969,23 +969,29 @@ async def get_region_suppliers(
     request: Request,
     region: str,
     years: Optional[str] = Query(None),
+    suppliers: Optional[str] = Query(None),
+    products: Optional[str] = Query(None),
     limit: int = Query(5, description="Топ-N поставщиков")
 ):
     """
     Топ поставщиков выбранного региона.
-    
+
     - **region**: Название региона
     - **years**: Годы закупки (через запятую)
+    - **suppliers**: Поставщики (через запятую)
+    - **products**: Продукты (через запятую)
     - **limit**: Количество поставщиков (по умолчанию 5)
     """
-    logger.info(f"Fetching suppliers for region: {region}, years: {years}")
-    
+    logger.info(f"Fetching suppliers for region: {region}, years: {years}, suppliers: {suppliers}, products: {products}")
+
     start_time = time.time()
-    
+
     try:
         # Парсинг параметров
         year_list = [int(y.strip()) for y in years.split(',')] if years else None
-        
+        supplier_list = [s.strip() for s in suppliers.split(',')] if suppliers else None
+        product_list = [p.strip() for p in products.split(',')] if products else None
+
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 query = """
@@ -997,17 +1003,25 @@ async def get_region_suppliers(
                     WHERE region = %(region)s
                 """
                 params = {'region': region, 'limit': limit}
-                
+
                 if year_list:
                     query += " AND year = ANY(%(years)s)"
                     params['years'] = year_list
-                
+
+                if supplier_list:
+                    query += " AND distributor = ANY(%(suppliers)s)"
+                    params['suppliers'] = supplier_list
+
+                if product_list:
+                    query += " AND what_purchased = ANY(%(products)s)"
+                    params['products'] = product_list
+
                 query += """
                     GROUP BY distributor
                     ORDER BY amount DESC
                     LIMIT %(limit)s
                 """
-                
+
                 cur.execute(query, params)
                 results = cur.fetchall()
 
@@ -1024,7 +1038,7 @@ async def get_region_suppliers(
                 logger.info(f"Region suppliers fetched in {elapsed:.3f}s, {len(suppliers_data)} suppliers")
 
                 return suppliers_data
-                
+
     except Exception as e:
         logger.error(f"Error fetching region suppliers: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1036,23 +1050,29 @@ async def get_region_categories(
     request: Request,
     region: str,
     years: Optional[str] = Query(None),
+    suppliers: Optional[str] = Query(None),
+    products: Optional[str] = Query(None),
     limit: int = Query(7, description="Топ-N категорий")
 ):
     """
     Категории продуктов выбранного региона.
-    
+
     - **region**: Название региона
     - **years**: Годы закупки (через запятую)
+    - **suppliers**: Поставщики (через запятую)
+    - **products**: Продукты (через запятую)
     - **limit**: Количество категорий (по умолчанию 7)
     """
-    logger.info(f"Fetching categories for region: {region}, years: {years}")
-    
+    logger.info(f"Fetching categories for region: {region}, years: {years}, suppliers: {suppliers}, products: {products}")
+
     start_time = time.time()
-    
+
     try:
         # Парсинг параметров
         year_list = [int(y.strip()) for y in years.split(',')] if years else None
-        
+        supplier_list = [s.strip() for s in suppliers.split(',')] if suppliers else None
+        product_list = [p.strip() for p in products.split(',')] if products else None
+
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 query = """
@@ -1064,20 +1084,28 @@ async def get_region_categories(
                     WHERE region = %(region)s
                 """
                 params = {'region': region, 'limit': limit}
-                
+
                 if year_list:
                     query += " AND year = ANY(%(years)s)"
                     params['years'] = year_list
-                
+
+                if supplier_list:
+                    query += " AND distributor = ANY(%(suppliers)s)"
+                    params['suppliers'] = supplier_list
+
+                if product_list:
+                    query += " AND what_purchased = ANY(%(products)s)"
+                    params['products'] = product_list
+
                 query += """
                     GROUP BY what_purchased
                     ORDER BY amount DESC
                     LIMIT %(limit)s
                 """
-                
+
                 cur.execute(query, params)
                 results = cur.fetchall()
-                
+
                 categories_data = [
                     {
                         'what_purchased': r['what_purchased'],
@@ -1086,12 +1114,12 @@ async def get_region_categories(
                     }
                     for r in results
                 ]
-                
+
                 elapsed = time.time() - start_time
                 logger.info(f"Region categories fetched in {elapsed:.3f}s, {len(categories_data)} categories")
-                
+
                 return categories_data
-                
+
     except Exception as e:
         logger.error(f"Error fetching region categories: {e}")
         raise HTTPException(status_code=500, detail=str(e))

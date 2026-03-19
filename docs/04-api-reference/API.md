@@ -11,6 +11,7 @@
 - [KPI Endpoints](#kpi-endpoints)
 - [Charts Endpoints](#charts-endpoints)
 - [Filters Endpoints](#filters-endpoints)
+- [Map Region Endpoints](#map-region-endpoints)
 - [Health Check](#health-check)
 - [Коды ошибок](#коды-ошибок)
 - [Примеры запросов](#примеры-запросов)
@@ -326,6 +327,80 @@ API использует ограничение запросов для защи
 ```json
 ["Freestyle Libre", "Sinocare"]
 ```
+
+---
+
+## Map Region Endpoints
+
+### GET /api/map/regions/{region}/suppliers
+
+Топ поставщиков выбранного региона.
+
+**Path Parameters:**
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `region` | `string` | Название региона |
+
+**Query Parameters:**
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `years` | `string` | Годы закупки (через запятую) |
+| `suppliers` | `string` | Поставщики (через запятую) |
+| `products` | `string` | Продукты (через запятую) |
+| `limit` | `int` | Количество поставщиков (по умолчанию 5) |
+
+**Response:** `SupplierData[]`
+```json
+[
+  {
+    "distributor": "ООО \"Фармстандарт\"",
+    "amount": 927012400.0,
+    "contracts_count": 9
+  }
+]
+```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `distributor` | `string` | Название поставщика |
+| `amount` | `number` | Сумма контрактов |
+| `contracts_count` | `number` | Количество контрактов |
+
+---
+
+### GET /api/map/regions/{region}/categories
+
+Категории продуктов выбранного региона.
+
+**Path Parameters:**
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `region` | `string` | Название региона |
+
+**Query Parameters:**
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `years` | `string` | Годы закупки (через запятую) |
+| `suppliers` | `string` | Поставщики (через запятую) |
+| `products` | `string` | Продукты (через запятую) |
+| `limit` | `int` | Количество категорий (по умолчанию 7) |
+
+**Response:** `CategoryData[]`
+```json
+[
+  {
+    "what_purchased": "Freestyle Libre",
+    "amount": 5000000.0,
+    "contracts_count": 10
+  }
+]
+```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `what_purchased` | `string` | Название продукта |
+| `amount` | `number` | Сумма контрактов |
+| `contracts_count` | `number` | Количество контрактов |
 
 ---
 

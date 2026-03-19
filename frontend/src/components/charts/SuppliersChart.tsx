@@ -96,10 +96,10 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
     <Paper sx={{
       p: 3,
       height: 400,
-      background: 'rgba(255, 255, 255, 0.98)',
+      background: 'rgba(15, 12, 41, 0.95)',
       backdropFilter: 'blur(20px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-    }}>
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+    }} role="region" aria-label="Диаграмма топ-5 поставщиков">
       <Typography
         variant="subtitle2"
         sx={{
@@ -110,7 +110,7 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
           borderBottom: '2px solid #00B4DB',
           letterSpacing: '0.5px',
           textTransform: 'uppercase',
-          color: 'rgba(0, 0, 0, 0.7)',
+          color: 'rgba(255, 255, 255, 0.85)',
         }}
       >
         🏢 Топ-5 Поставщиков ({percentage}%)
@@ -142,7 +142,7 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
                 dataKey="value"
                 label={renderCustomizedLabel}
                 labelLine={false}
-                stroke="#FFFFFF"
+                stroke="rgba(15, 12, 41, 0.95)"
                 strokeWidth={2}
               >
                 {chartData.map((_, index) => (
@@ -154,13 +154,14 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(255, 255, 255, 0.98)',
-                  border: 'none',
+                  background: 'rgba(26, 58, 92, 0.98)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   borderRadius: 12,
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
                   fontFamily: "'Inter', sans-serif",
                   fontSize: '12px',
                   fontWeight: '500',
+                  color: '#FFFFFF',
                 }}
                 formatter={(value) => [formatValue(Number(value) || 0), 'Сумма']}
                 labelFormatter={(label) => chartData.find(d => d.name === label)?.fullName || label}
@@ -178,7 +179,7 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
           ml: { xs: 0, sm: 0, md: 2 },
           mt: { xs: 0, sm: 0, md: 0 },
           pl: { xs: 0, sm: 0, md: 2 },
-          borderLeft: { md: '1px solid rgba(0,0,0,0.1)' },
+          borderLeft: { md: '1px solid rgba(255, 255, 255, 0.1)' },
           display: 'flex',
           flexDirection: 'column',
           justifyContent: { md: 'center' }
@@ -210,7 +211,7 @@ export const SuppliersChart = ({ data, loading = false }: SuppliersChartProps) =
                   sx={{
                     fontSize: { xs: '9px', sm: '10px', md: '10px' },
                     lineHeight: 1.3,
-                    color: '#666666',
+                    color: 'rgba(255, 255, 255, 0.85)',
                     wordBreak: 'break-word',
                     whiteSpace: 'normal',
                     flex: '1 1 auto',

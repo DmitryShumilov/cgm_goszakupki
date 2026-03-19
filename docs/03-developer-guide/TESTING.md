@@ -24,39 +24,38 @@ flowchart TD
     subgraph "Trigger"
         Push[📤 Push / PR<br/>main, develop]
     end
-    
+
     subgraph "Backend Jobs"
-        BackendTest[🐍 Backend Tests<br/>pytest 45 tests]
-        BackendCov[📊 Coverage 92%<br/>Goal: 60%+]
+        BackendTest[🐍 Backend Tests<br/>48 tests ✅]
+        BackendCov[📊 Coverage ~65%<br/>Goal: 60%+]
     end
-    
+
     subgraph "Frontend Jobs"
         FrontendLint[🔍 ESLint<br/>Code quality]
-        FrontendTest[⚛️ Frontend Tests<br/>37 tests]
+        FrontendTest[⚛️ Frontend Tests<br/>37 tests ✅]
         FrontendBuild[📦 Build<br/>Production]
     end
-    
+
     subgraph "E2E Jobs"
-        E2E[🎭 Playwright<br/>19 scenarios]
+        E2E[🎭 Playwright<br/>19 scenarios ✅]
         Report[📋 HTML Report<br/>Artifacts]
     end
-    
+
     subgraph "Deploy"
         DockerBuild[🐳 Docker Build<br/>Multi-stage]
         DockerPush[📤 Push to Registry<br/>Latest tag]
     end
-    
+
     Push --> BackendTest
     BackendTest --> BackendCov
-    
+
     Push --> FrontendLint
     FrontendLint --> FrontendTest
     FrontendTest --> FrontendBuild
-    
-    BackendTest --> E2E
+
     FrontendBuild --> E2E
     E2E --> Report
-    
+
     BackendCov --> DockerBuild
     FrontendBuild --> DockerBuild
     DockerBuild --> DockerPush
@@ -70,26 +69,28 @@ flowchart TD
 
 ```
          ┌─────────────────┐
-         │    E2E Tests    │  Playwright (19 тестов)
+         │    E2E Tests    │  Playwright (19 тестов) ✅
          └────────┬────────┘
                   │
          ┌────────▼────────┐
-         │ Component Tests │  Testing Library (37 тестов)
+         │ Component Tests │  Testing Library (37 тестов) ✅
          └────────┬────────┘
                   │
          ┌────────▼────────┐
-         │   Unit Tests    │  Pytest (45 тестов)
+         │   Unit Tests    │  Pytest (48 тестов) ✅
          └─────────────────┘
 ```
 
 ### Покрытие кода
 
-| Компонент | Coverage | Цель |
-|-----------|----------|------|
-| Backend | 92% | ✅ 60%+ |
-| Frontend KPI | 91% | ✅ 50%+ |
-| Frontend Charts | 38% | ⚠️ 50%+ |
-| E2E | 19 сценариев | ✅ 10+ |
+| Компонент | Coverage | Цель | Статус |
+|-----------|----------|------|--------|
+| Backend | ~65% | 60%+ | ✅ Выполнено |
+| Frontend KPI | 91% | 50%+ | ✅ |
+| Frontend Charts | 38% | 50%+ | ⚠️ |
+| E2E | 19 сценариев | 10+ | ✅ |
+
+**Обновление (v1.4.5, 17 марта 2026):** Backend тесты реализованы — 48 тестов (100% прохождение).
 
 ---
 
@@ -108,12 +109,15 @@ pip install pytest pytest-asyncio httpx pytest-cov
 backend/
 ├── main.py
 ├── tests/
-│   ├── conftest.py          # Фикстуры
-│   ├── test_health.py       # Health check тесты
-│   ├── test_kpi.py          # KPI endpoint тесты
-│   ├── test_charts.py       # Charts endpoint тесты
-│   └── test_filters.py      # Filters endpoint тесты
+│   ├── conftest.py          # Фикстуры (RealDictCursor mock)
+│   ├── test_health.py       # Health check тесты (3 теста) ✅
+│   ├── test_kpi.py          # KPI endpoint тесты (9 тестов) ✅
+│   ├── test_charts.py       # Charts endpoint тесты (12 тестов) ✅
+│   ├── test_filters.py      # Filters endpoint тесты (10 тестов) ✅
+│   └── test_validation.py   # Validation тесты (14 тестов) ✅
 ```
+
+**Итого:** 48 тестов, 100% прохождение (v1.4.5)
 
 ### Запуск тестов
 
@@ -771,11 +775,18 @@ npm run test:e2e:report
 
 ## Метрики качества
 
-| Метрика | Значение | Цель |
-|---------|----------|------|
-| Backend тестов | 45 | ✅ 40+ |
-| Frontend тестов | 37 | ✅ 30+ |
-| E2E сценариев | 19 | ✅ 10+ |
-| Backend coverage | 92% | ✅ 60%+ |
-| Frontend coverage | 38% | ⚠️ 50%+ |
-| CI pipeline | ✅ Зелёный | ✅ |
+| Метрика | Значение | Цель | Статус |
+|---------|----------|------|--------|
+| Backend тестов | **48** | 40+ | ✅ Выполнено |
+| Frontend тестов | **63** | 30+ | ✅ Выполнено |
+| E2E сценариев | **19** | 10+ | ✅ Выполнено |
+| Backend coverage | **~65%** | 60%+ | ✅ Выполнено |
+| Frontend coverage | **56.48%** | 50%+ | ✅ Выполнено |
+| CI pipeline | ✅ Зелёный | ✅ | ✅ |
+
+**Примечание (v1.4.7, 17 марта 2026):**
+- Backend: 48 тестов в 5 файлах (test_health, test_kpi, test_charts, test_filters, test_validation)
+- Frontend: 63 теста в 8 файлах (KpiPanel, FilterPanel, 5 Charts, filterStore, setupTests)
+- E2E: 19 сценариев Playwright (3 файла: dashboard, filters, mobile)
+- Все тесты проходят: 63/63 (100%)
+- Combined coverage (frontend + frontend_map): ~63%

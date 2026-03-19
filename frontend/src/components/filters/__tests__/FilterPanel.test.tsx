@@ -110,4 +110,82 @@ describe('FilterPanel', () => {
     const selectAllButtons = screen.getAllByTestId('DoneAllIcon');
     expect(selectAllButtons.length).toBeGreaterThan(0);
   });
+
+  it('отображает мобильное меню на маленьких экранах', () => {
+    // Устанавливаем мобильный viewport
+    Object.defineProperty(window, 'innerWidth', { writable: true, value: 600 });
+    
+    render(<FilterPanel onRefresh={mockOnRefresh} />);
+
+    // Проверяем наличие кнопки открытия мобильного меню
+    expect(screen.getByRole('button', { name: /фильтр/i })).toBeInTheDocument();
+  });
+
+  it('корректно обрабатывает пустые списки фильтров', () => {
+    // Устанавливаем пустые списки
+    useFilterStore.setState({
+      availableYears: [],
+      availableMonths: [],
+      availableRegions: [],
+      availableSuppliers: [],
+      availableProducts: [],
+    });
+
+    const { container } = render(<FilterPanel onRefresh={mockOnRefresh} />);
+
+    // Проверяем, что компонент не падает
+    expect(container).toBeInTheDocument();
+  });
+
+  it('отображает годы как выбранные при наличии в selectedYears', () => {
+    useFilterStore.setState({
+      selectedYears: [2025],
+      availableYears: [2024, 2025, 2026],
+    });
+
+    render(<FilterPanel onRefresh={mockOnRefresh} />);
+
+    // Проверяем, что 2025 отображается как выбранный
+    const year2025 = screen.getByText('2025');
+    expect(year2025.closest('button')).toHaveClass('MuiButton-contained');
+  });
+
+  it('отображает годы как невыбранные при отсутствии в selectedYears', () => {
+    useFilterStore.setState({
+      selectedYears: [],
+      availableYears: [2024, 2025, 2026],
+    });
+
+    render(<FilterPanel onRefresh={mockOnRefresh} />);
+
+    // Проверяем, что 2024 отображается как невыбранный
+    const year2024 = screen.getByText('2024');
+    expect(year2024.closest('button')).toHaveClass('MuiButton-outlined');
+  });
+
+  it('отображает месяцы как выбранные при наличии в selectedMonths', () => {
+    useFilterStore.setState({
+      selectedMonths: [1],
+      availableMonths: [1, 2, 3],
+    });
+
+    render(<FilterPanel onRefresh={mockOnRefresh} />);
+
+    // Проверяем, что Янв отображается как выбранный
+    const monthJan = screen.getByText('Янв');
+    expect(monthJan.closest('button')).toHaveClass('MuiButton-contained');
+  });
+
+  it('отображает месяцы как невыбранные при отсутствии в selectedMonths', () => {
+    useFilterStore.setState({
+      selectedMonths: [],
+      availableMonths: [1, 2, 3],
+    });
+
+    render(<FilterPanel onRefresh={mockOnRefresh} />);
+
+    // Проверяем, что Фев отображается как невыбранный
+    const monthFeb = screen.getByText('Фев');
+    expect(monthFeb.closest('button')).toHaveClass('MuiButton-outlined');
+  });
 });

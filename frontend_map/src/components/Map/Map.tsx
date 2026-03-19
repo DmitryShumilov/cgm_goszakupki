@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { MapContainer, GeoJSON, useMap } from 'react-leaflet';
+import { MapContainer, GeoJSON, useMap, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { normalizeRegionName } from '../../utils/regionMapping';
@@ -46,6 +46,88 @@ const ZoomControl: React.FC = () => {
         −
       </button>
     </div>
+  );
+};
+
+// Компонент для отображения названий регионов при высоком зуме
+interface RegionLabelsProps {
+  geojsonData: any;
+  zoom: number;
+}
+
+const RegionLabels: React.FC<RegionLabelsProps> = ({ geojsonData, zoom }) => {
+  const map = useMap();
+  const [labels, setLabels] = useState<Array<{ id: string; latlng: [number, number]; name: string }>>([]);
+
+  useEffect(() => {
+    if (!geojsonData || zoom < 5) {
+      setLabels([]);
+      return;
+    }
+
+    const regionLabels: Array<{ id: string; latlng: [number, number]; name: string }> = [];
+
+    geojsonData.features.forEach((feature: any) => {
+      const regionName = feature.properties.region || feature.properties.name;
+      if (!regionName) return;
+
+      // Вычисляем центроид полигона
+      const coordinates = feature.geometry.coordinates;
+      if (!coordinates || coordinates.length === 0) return;
+
+      // Для полигонов (MultiPolygon)
+      let allPoints: number[][] = [];
+      if (feature.geometry.type === 'MultiPolygon') {
+        // Берём самый большой полигон
+        const largestPolygon = coordinates.reduce((largest: any[], current: any[]) => {
+          return current.flat(2).length > largest.flat(2).length ? current : largest;
+        }, coordinates[0]);
+        allPoints = largestPolygon[0];
+      } else if (feature.geometry.type === 'Polygon') {
+        allPoints = coordinates[0];
+      }
+
+      if (allPoints.length === 0) return;
+
+      // Вычисляем средний центроид
+      const avgLon = allPoints.reduce((sum, p) => sum + p[0], 0) / allPoints.length;
+      const avgLat = allPoints.reduce((sum, p) => sum + p[1], 0) / allPoints.length;
+
+      // Нормализуем долготу обратно (если была сдвинута)
+      const normalizedLon = avgLon > 180 ? avgLon - 360 : avgLon;
+
+      regionLabels.push({
+        id: regionName,
+        latlng: [avgLat, normalizedLon] as [number, number],
+        name: regionName,
+      });
+    });
+
+    setLabels(regionLabels);
+  }, [geojsonData, zoom]);
+
+  // Показываем метки только при зуме >= 5
+  if (zoom < 5 || labels.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      {labels.map((label) => (
+        <Marker
+          key={label.id}
+          position={label.latlng}
+          icon={L.divIcon({
+            className: 'region-label-marker',
+            html: `<div class="region-label">${label.name}</div>`,
+            iconSize: [200, 32],
+            iconAnchor: [100, 16],
+            popupAnchor: [0, -16],
+          })}
+          interactive={false}
+        />
+      ))}
+    </>
   );
 };
 
@@ -132,12 +214,27 @@ export const Map: React.FC<MapProps> = ({ onRegionSelect, regionData, selectedRe
   const [geojsonData, setGeojsonData] = useState<any>(null);
   const [maxSum, setMaxSum] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
-  
+  const [zoom, setZoom] = useState(3);
+
   // Используем ref для доступа к актуальному selectedRegion в обработчиках событий
   const selectedRegionRef = useRef(selectedRegion);
   useEffect(() => {
     selectedRegionRef.current = selectedRegion;
   }, [selectedRegion]);
+
+  // Компонент для отслеживания зума
+  const ZoomTracker: React.FC = () => {
+    const map = useMap();
+    useEffect(() => {
+      const updateZoom = () => setZoom(map.getZoom());
+      map.on('zoomend', updateZoom);
+      updateZoom();
+      return () => {
+        map.off('zoomend', updateZoom);
+      };
+    }, [map]);
+    return null;
+  };
 
   useEffect(() => {
     fetch('/russia_regions.geojson')
@@ -257,12 +354,18 @@ export const Map: React.FC<MapProps> = ({ onRegionSelect, regionData, selectedRe
       className="map-container"
       worldCopyJump={false}
     >
-      <GeoJSON 
-        data={geojsonData} 
-        onEachFeature={onEachFeature} 
+      {/* Компонент для отслеживания зума */}
+      <ZoomTracker />
+
+      <GeoJSON
+        data={geojsonData}
+        onEachFeature={onEachFeature}
         style={style}
       />
-      
+
+      {/* Названия регионов при высоком зуме */}
+      <RegionLabels geojsonData={geojsonData} zoom={zoom} />
+
       {/* Кастомные кнопки зума */}
       <ZoomControl />
     </MapContainer>

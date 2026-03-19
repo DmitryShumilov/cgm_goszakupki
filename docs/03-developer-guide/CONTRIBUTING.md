@@ -575,7 +575,7 @@ git push origin v1.0.0
 
 Полный план оптимизации находится в документе:
 
-- **[docs/OPTIMIZATION_PLAN.md](docs/OPTIMIZATION_PLAN.md)** — Детальный план с чеклистами, примерами кода и метриками успеха
+- **[../03-developer-guide/OPTIMIZATION_PLAN.md](../03-developer-guide/OPTIMIZATION_PLAN.md)** — Детальный план с чеклистами, примерами кода и метриками успеха
 
 ### 🚀 Начало работ
 
