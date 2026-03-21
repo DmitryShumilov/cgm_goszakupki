@@ -67,6 +67,40 @@ flowchart LR
     Query --> PostgreSQL
 ```
 
+### Sequence Diagram: KPI Request
+
+```mermaid
+sequenceDiagram
+    participant Client as Frontend (React)
+    participant API as FastAPI (8000)
+    participant Cache as SimpleCache (5min TTL)
+    participant DB as PostgreSQL (17)
+
+    Client->>API: POST /api/kpi {years: [2024, 2025]}
+    
+    Note over API: Rate Limit Check (60/min)
+    alt Rate limit exceeded
+        API-->>Client: 429 Too Many Requests
+    else Rate limit OK
+        API->>Cache: Check cache key
+        
+        alt Cache hit
+            Cache-->>API: Return cached data
+            API-->>Client: 200 OK (from cache)
+        else Cache miss
+            API->>API: Build SQL query<br/>(WHERE year IN (2024, 2025))
+            API->>DB: Execute query
+            Note over DB: Index scan on idx_purchase_year
+            DB-->>API: Return KPI data (6 metrics)
+            
+            API->>Cache: Store result (TTL: 5 min)
+            API-->>Client: 200 OK {<br/>  total_amount: 23.49B ₽,<br/>  contract_count: 1802,<br/>  ...<br/>}
+        end
+    end
+    
+    Note over Client,API: Total time: <300ms
+```
+
 ---
 
 ## Базовая информация
