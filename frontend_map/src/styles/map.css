@@ -219,6 +219,68 @@ path.leaflet-interactive {
 }
 
 /* ═══════════════════════════════════════════════════════════ */
+/* МЕТКИ РЕГИОНОВ (при высоком зуме)                           */
+/* ═══════════════════════════════════════════════════════════ */
+
+.region-label-marker {
+  background: transparent;
+  border: none;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  height: auto !important;
+}
+
+.region-label-marker .region-label {
+  background: rgba(15, 12, 41, 0.9);
+  backdrop-filter: blur(8px);
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(51, 136, 255, 0.4);
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.95;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(51, 136, 255, 0.2);
+  display: inline-block;
+  width: max-content;
+  max-width: 300px;
+  height: auto;
+  line-height: 1.4;
+}
+
+.region-label:hover {
+  opacity: 1;
+  background: rgba(15, 12, 41, 0.95);
+  border-color: rgba(51, 136, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 30px rgba(51, 136, 255, 0.3);
+}
+
+/* Анимация появления меток */
+.leaflet-marker-pane .region-label {
+  animation: fadeInLabel 0.3s ease-out;
+}
+
+@keyframes fadeInLabel {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.95);
+  }
+  to {
+    opacity: 0.95;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
 /* FOCUS СОСТОЯНИЯ (WCAG 2.1 AA - видимый фокус)              */
 /* ═══════════════════════════════════════════════════════════ */
 
@@ -449,22 +511,104 @@ path.leaflet-interactive:focus-visible:focus {
 }
 
 .kpi-card {
-  background: rgba(255, 255, 255, 0.02);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all var(--duration-normal) var(--ease-out);
+  /* Glassmorphism фон - максимально выраженный */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  
+  /* Границы с ярким свечением */
+  border: 2px solid rgba(51, 136, 255, 0.35) !important;
+  border-top: 2px solid rgba(51, 136, 255, 0.6) !important;
+  border-left: 2px solid rgba(51, 136, 255, 0.6) !important;
+  
+  /* Глубокие тени для 3D эффекта */
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 8px 24px rgba(51, 136, 255, 0.25),
+    0 0 20px rgba(51, 136, 255, 0.1),
+    inset 0 2px 0 rgba(255, 255, 255, 0.15);
+  
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   animation: fadeInUp var(--duration-normal) var(--ease-out) backwards;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
 
+/* Задержки анимации для карточек */
 .kpi-card:nth-child(1) { animation-delay: 50ms; }
 .kpi-card:nth-child(2) { animation-delay: 100ms; }
 .kpi-card:nth-child(3) { animation-delay: 150ms; }
 .kpi-card:nth-child(4) { animation-delay: 200ms; }
 
+/* Яркий блик при наведении */
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(51, 136, 255, 0.2),
+    rgba(255, 255, 255, 0.15),
+    rgba(51, 136, 255, 0.2),
+    transparent
+  );
+  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.kpi-card:hover::before {
+  left: 100%;
+}
+
+/* Дополнительное свечение по углам */
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(51, 136, 255, 0.08) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.kpi-card:hover::after {
+  opacity: 1;
+}
+
 .kpi-card:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.2);
+  /* Максимально яркий фон при наведении */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  border-color: rgba(51, 136, 255, 0.7) !important;
+  border-top-color: rgba(51, 136, 255, 0.9) !important;
+  border-left-color: rgba(51, 136, 255, 0.9) !important;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 12px 40px rgba(51, 136, 255, 0.4),
+    0 0 40px rgba(51, 136, 255, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px) scale(1.01);
 }
 
 .kpi-label {
@@ -475,6 +619,7 @@ path.leaflet-interactive:focus-visible:focus {
   letter-spacing: var(--tracking-wide);
   margin-bottom: var(--space-2);
   line-height: var(--leading-none);
+  padding-left: 4px;
 }
 
 .kpi-value {
@@ -484,6 +629,7 @@ path.leaflet-interactive:focus-visible:focus {
   color: #ffffff !important;
   word-break: break-word;
   line-height: var(--leading-none);
+  padding-left: 4px;
 }
 
 .kpi-value.highlight {
@@ -536,6 +682,64 @@ path.leaflet-interactive:focus-visible:focus {
 /* Секции информации */
 .info-section {
   margin-bottom: var(--space-5);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 2px solid rgba(51, 136, 255, 0.2) !important;
+  border-top: 2px solid rgba(51, 136, 255, 0.35) !important;
+  border-left: 2px solid rgba(51, 136, 255, 0.35) !important;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(51, 136, 255, 0.15),
+    0 0 16px rgba(51, 136, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.info-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(51, 136, 255, 0.08),
+    transparent
+  );
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+.info-section:hover::before {
+  left: 100%;
+}
+
+.info-section:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  border-color: rgba(51, 136, 255, 0.4) !important;
+  border-top-color: rgba(51, 136, 255, 0.55) !important;
+  border-left-color: rgba(51, 136, 255, 0.55) !important;
+  box-shadow: 
+    0 12px 36px rgba(0, 0, 0, 0.5),
+    0 6px 18px rgba(51, 136, 255, 0.25),
+    0 0 24px rgba(51, 136, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
 }
 
 .info-section-title {
@@ -544,11 +748,15 @@ path.leaflet-interactive:focus-visible:focus {
   color: rgba(255, 255, 255, 0.82) !important;
   margin-bottom: var(--space-3);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(51, 136, 255, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
 .info-section-content {
   color: rgba(255, 255, 255, 0.82) !important;
+  position: relative;
+  z-index: 1;
 }
 
 /* Заглушка детализации */
@@ -580,7 +788,7 @@ path.leaflet-interactive:focus-visible:focus {
 .suppliers-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   padding: 0;
   margin: 0;
   list-style: none;
@@ -590,28 +798,59 @@ path.leaflet-interactive:focus-visible:focus {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-2);
-  border-radius: var(--radius-sm);
-  transition: all var(--duration-fast) var(--ease-out);
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: default;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.supplier-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(51, 136, 255, 0.08),
+    transparent
+  );
+  transition: width 0.4s ease;
+  pointer-events: none;
+}
+
+.supplier-item:hover::before {
+  width: 100%;
 }
 
 .supplier-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(51, 136, 255, 0.1);
+  border-color: rgba(51, 136, 255, 0.3);
+  transform: translateX(4px);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 16px rgba(51, 136, 255, 0.15);
 }
 
 .supplier-rank {
   font-size: 11px;
   font-weight: 700;
   color: #ffffff;
-  background: var(--accent-primary);
-  minWidth: 24px;
-  height: 24px;
-  borderRadius: 6px;
+  background: linear-gradient(135deg, #3388ff 0%, #0066cc 100%);
+  minWidth: 28px;
+  height: 28px;
+  borderRadius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(51, 136, 255, 0.4);
+  position: relative;
+  z-index: 1;
 }
 
 .supplier-name {
@@ -668,31 +907,123 @@ path.leaflet-interactive:focus-visible:focus {
   gap: var(--space-2);
   margin-top: var(--space-3);
   padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  border: 2px solid rgba(51, 136, 255, 0.2) !important;
+  border-top: 2px solid rgba(51, 136, 255, 0.35) !important;
+  border-left: 2px solid rgba(51, 136, 255, 0.35) !important;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(51, 136, 255, 0.15),
+    0 0 16px rgba(51, 136, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.categories-legend::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(51, 136, 255, 0.08),
+    transparent
+  );
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+.categories-legend:hover::before {
+  left: 100%;
+}
+
+.categories-legend:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  border-color: rgba(51, 136, 255, 0.35) !important;
+  border-top-color: rgba(51, 136, 255, 0.5) !important;
+  border-left-color: rgba(51, 136, 255, 0.5) !important;
+  box-shadow: 
+    0 12px 36px rgba(0, 0, 0, 0.5),
+    0 6px 18px rgba(51, 136, 255, 0.25),
+    0 0 24px rgba(51, 136, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 12px;
   cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-out);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+/* Блик при наведении */
+.legend-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(51, 136, 255, 0.12),
+    transparent
+  );
+  transition: width 0.4s ease;
+}
+
+.legend-item:hover::before {
+  width: 100%;
 }
 
 .legend-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(51, 136, 255, 0.15);
+  border-color: rgba(51, 136, 255, 0.3);
+  transform: translateX(6px);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 16px rgba(51, 136, 255, 0.2);
 }
 
 .legend-color {
-  width: 14px;
-  height: 14px;
-  border-radius: var(--radius-sm);
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(51, 136, 255, 0.3);
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.legend-item:hover .legend-color {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(51, 136, 255, 0.5);
 }
 
 .legend-label {
@@ -702,6 +1033,9 @@ path.leaflet-interactive:focus-visible:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
 }
 
 .legend-value {
@@ -710,12 +1044,21 @@ path.leaflet-interactive:focus-visible:focus {
   color: var(--accent-secondary) !important;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 0 12px rgba(79, 195, 247, 0.3);
 }
 
 .legend-percentage {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
   margin-left: var(--space-1);
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  background: rgba(51, 136, 255, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 /* Загрузка */

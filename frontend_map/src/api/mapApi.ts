@@ -53,8 +53,8 @@ export const mapApi = {
   getRegions: async (params?: FilterParams): Promise<RegionData[]> => {
     try {
       const formattedParams = formatParams(params);
-      const response = await apiClient.get<RegionData[]>('/api/map/regions', { 
-        params: formattedParams 
+      const response = await apiClient.get<RegionData[]>('/map/regions', {
+        params: formattedParams
       });
       return response.data;
     } catch (error) {
@@ -66,7 +66,7 @@ export const mapApi = {
   // Получение доступных лет
   getYears: async (): Promise<number[]> => {
     try {
-      const response = await apiClient.get<number[]>('/api/filters/years');
+      const response = await apiClient.get<number[]>('/filters/years');
       return response.data;
     } catch (error) {
       console.error('Error fetching years:', error);
@@ -77,7 +77,7 @@ export const mapApi = {
   // Получение доступных регионов
   getRegionsList: async (): Promise<string[]> => {
     try {
-      const response = await apiClient.get<string[]>('/api/filters/regions');
+      const response = await apiClient.get<string[]>('/filters/regions');
       return response.data;
     } catch (error) {
       console.error('Error fetching regions:', error);
@@ -88,7 +88,7 @@ export const mapApi = {
   // Получение доступных поставщиков
   getSuppliers: async (): Promise<string[]> => {
     try {
-      const response = await apiClient.get<string[]>('/api/filters/suppliers');
+      const response = await apiClient.get<string[]>('/filters/suppliers');
       return response.data;
     } catch (error) {
       console.error('Error fetching suppliers:', error);
@@ -99,7 +99,7 @@ export const mapApi = {
   // Получение доступных продуктов
   getProducts: async (): Promise<string[]> => {
     try {
-      const response = await apiClient.get<string[]>('/api/filters/products');
+      const response = await apiClient.get<string[]>('/filters/products');
       return response.data;
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -110,20 +110,26 @@ export const mapApi = {
   // Топ поставщиков региона
   getRegionSuppliers: async (
     region: string,
-    params?: { years?: number[]; limit?: number }
+    params?: { years?: number[]; suppliers?: string[]; products?: string[]; limit?: number }
   ): Promise<SupplierData[]> => {
     try {
       const formattedParams: Record<string, string> = {};
-      
+
       if (params?.years && params.years.length > 0) {
         formattedParams.years = params.years.join(',');
+      }
+      if (params?.suppliers && params.suppliers.length > 0) {
+        formattedParams.suppliers = params.suppliers.join(',');
+      }
+      if (params?.products && params.products.length > 0) {
+        formattedParams.products = params.products.join(',');
       }
       if (params?.limit) {
         formattedParams.limit = params.limit.toString();
       }
-      
+
       const response = await apiClient.get<SupplierData[]>(
-        `/api/map/regions/${encodeURIComponent(region)}/suppliers`,
+        `/map/regions/${encodeURIComponent(region)}/suppliers`,
         { params: formattedParams }
       );
       return response.data;
@@ -136,20 +142,26 @@ export const mapApi = {
   // Категории продуктов региона
   getRegionCategories: async (
     region: string,
-    params?: { years?: number[]; limit?: number }
+    params?: { years?: number[]; suppliers?: string[]; products?: string[]; limit?: number }
   ): Promise<CategoryData[]> => {
     try {
       const formattedParams: Record<string, string> = {};
-      
+
       if (params?.years && params.years.length > 0) {
         formattedParams.years = params.years.join(',');
+      }
+      if (params?.suppliers && params.suppliers.length > 0) {
+        formattedParams.suppliers = params.suppliers.join(',');
+      }
+      if (params?.products && params.products.length > 0) {
+        formattedParams.products = params.products.join(',');
       }
       if (params?.limit) {
         formattedParams.limit = params.limit.toString();
       }
-      
+
       const response = await apiClient.get<CategoryData[]>(
-        `/api/map/regions/${encodeURIComponent(region)}/categories`,
+        `/map/regions/${encodeURIComponent(region)}/categories`,
         { params: formattedParams }
       );
       return response.data;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import {
   Box,
   Drawer,
@@ -26,7 +26,7 @@ interface FilterPanelProps {
   onRefresh: () => void;
 }
 
-export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
+export const FilterPanel = memo(({ onRefresh }: FilterPanelProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -77,7 +77,8 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
             startIcon={<RefreshIcon />}
             onClick={onRefresh}
             fullWidth
-            sx={{ 
+            aria-label="Обновить данные"
+            sx={{
               mb: 2,
               background: 'linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)',
               boxShadow: '0 4px 15px rgba(0, 180, 219, 0.4)',
@@ -97,7 +98,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '13px', color: '#FFFFFF' }}>Год</Typography>
-            <IconButton size="small" onClick={selectAllYears} sx={{ color: '#00B4DB' }}>
+            <IconButton size="small" onClick={selectAllYears} sx={{ color: '#00B4DB' }} aria-label="Выбрать все годы">
               <CheckAllIcon fontSize="small" />
             </IconButton>
           </Box>
@@ -141,7 +142,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '13px', color: '#FFFFFF' }}>Месяц</Typography>
-            <IconButton size="small" onClick={selectAllMonths} sx={{ color: '#00B4DB' }}>
+            <IconButton size="small" onClick={selectAllMonths} sx={{ color: '#00B4DB' }} aria-label="Выбрать все месяцы">
               <CheckAllIcon fontSize="small" />
             </IconButton>
           </Box>
@@ -153,19 +154,19 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   variant={selectedMonths.includes(month) ? 'contained' : 'outlined'}
                   onClick={() => toggleMonth(month)}
                   fullWidth
-                  sx={{ 
-                    minWidth: 'auto', 
-                    p: 0.5, 
-                    fontSize: '10px',
+                  sx={{
+                    minWidth: 'auto',
+                    p: 0.5,
+                    fontSize: '11px',
                     fontWeight: 500,
-                    background: selectedMonths.includes(month) 
-                      ? 'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)' 
+                    background: selectedMonths.includes(month)
+                      ? 'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)'
                       : 'transparent',
                     border: '1px solid rgba(255,255,255,0.3)',
                     color: '#FFFFFF',
                     '&:hover': {
-                      background: selectedMonths.includes(month) 
-                        ? 'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)' 
+                      background: selectedMonths.includes(month)
+                        ? 'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)'
                         : 'rgba(255,255,255,0.1)',
                     },
                   }}
@@ -208,6 +209,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '& fieldset': {
                       borderColor: 'rgba(255,255,255,0.3)',
                     },
@@ -216,7 +218,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'rgba(255,255,255,0.6)',
+                    color: 'rgba(255,255,255,0.85)',
                   },
                 }}
               />
@@ -243,6 +245,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   border: '1px solid rgba(255,255,255,0.2)',
                   '& .MuiAutocomplete-option': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '&:hover': {
                       background: 'rgba(0, 180, 219, 0.2)',
                     },
@@ -288,6 +291,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '& fieldset': {
                       borderColor: 'rgba(255,255,255,0.3)',
                     },
@@ -296,7 +300,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'rgba(255,255,255,0.6)',
+                    color: 'rgba(255,255,255,0.85)',
                   },
                 }}
               />
@@ -323,6 +327,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   border: '1px solid rgba(255,255,255,0.2)',
                   '& .MuiAutocomplete-option': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '&:hover': {
                       background: 'rgba(0, 180, 219, 0.2)',
                     },
@@ -368,6 +373,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '& fieldset': {
                       borderColor: 'rgba(255,255,255,0.3)',
                     },
@@ -376,7 +382,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'rgba(255,255,255,0.6)',
+                    color: 'rgba(255,255,255,0.85)',
                   },
                 }}
               />
@@ -403,6 +409,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   border: '1px solid rgba(255,255,255,0.2)',
                   '& .MuiAutocomplete-option': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '&:hover': {
                       background: 'rgba(0, 180, 219, 0.2)',
                     },
@@ -448,6 +455,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '& fieldset': {
                       borderColor: 'rgba(255,255,255,0.3)',
                     },
@@ -456,7 +464,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: 'rgba(255,255,255,0.6)',
+                    color: 'rgba(255,255,255,0.85)',
                   },
                 }}
               />
@@ -483,6 +491,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
                   border: '1px solid rgba(255,255,255,0.2)',
                   '& .MuiAutocomplete-option': {
                     color: '#FFFFFF',
+                    fontSize: '12px',
                     '&:hover': {
                       background: 'rgba(0, 180, 219, 0.2)',
                     },
@@ -502,7 +511,8 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
           startIcon={<ClearAllIcon />}
           onClick={resetFilters}
           fullWidth
-          sx={{ 
+          aria-label="Сбросить все фильтры"
+          sx={{
             mt: 2,
             color: 'rgba(255,255,255,0.8)',
             border: '1px solid rgba(255,255,255,0.3)',
@@ -527,7 +537,7 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
           background: 'linear-gradient(135deg, #0D2B4A 0%, #1a3a5c 100%)',
         }}>
           <Toolbar variant="dense">
-            <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }}>
+            <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }} aria-label="Открыть панель фильтров">
               <FilterListIcon />
             </IconButton>
             <Typography variant="body2" noWrap sx={{ fontSize: '12px' }}>
@@ -540,6 +550,8 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           onOpen={handleDrawerToggle}
+          aria-expanded={mobileOpen}
+          aria-label="Мобильная панель фильтров"
           sx={{
             '& .MuiDrawer-paper': {
               width: 280,
@@ -571,6 +583,8 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
   return (
     <Drawer
       variant="permanent"
+      role="navigation"
+      aria-label="Панель фильтров"
       sx={{
         width: 280,
         flexShrink: 0,
@@ -601,4 +615,4 @@ export const FilterPanel = ({ onRefresh }: FilterPanelProps) => {
       {sidebarContent}
     </Drawer>
   );
-};
+});

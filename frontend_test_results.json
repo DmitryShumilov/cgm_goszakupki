@@ -1,0 +1,98 @@
+{
+  "main": {
+    "name": "Main Dashboard",
+    "url": "http://localhost:5173",
+    "status_code": 200,
+    "response_time_ms": 2032.301,
+    "content_type": "text/html",
+    "title": "CGM ÐÐ¾ÑÐ·Ð°ÐºÑÐ¿ÐºÐ¸ - ÐÐ°ÑÐ±Ð¾ÑÐ´",
+    "scripts_count": 2,
+    "has_app_root": true,
+    "has_vite": true,
+    "pass": true,
+    "errors": []
+  },
+  "main_assets": {
+    "scripts": [],
+    "css": [],
+    "pass": true
+  },
+  "main_proxy": {
+    "status_code": 200,
+    "pass": true,
+    "data": [
+      2024,
+      2025,
+      2026,
+      2027,
+      2028,
+      2029,
+      2030,
+      2031,
+      2032,
+      2033,
+      2034
+    ]
+  },
+  "main_cors": {
+    "status_code": 204,
+    "cors_headers": {
+      "Access-Control-Allow-Origin": "http://localhost:5173",
+      "Vary": "Origin, Access-Control-Request-Headers",
+      "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+      "Content-Length": "0",
+      "Date": "Sun, 15 Mar 2026 10:03:51 GMT",
+      "Connection": "keep-alive",
+      "Keep-Alive": "timeout=5"
+    },
+    "pass": true
+  },
+  "map": {
+    "name": "Map Dashboard",
+    "url": "http://localhost:5174",
+    "status_code": 200,
+    "response_time_ms": 2041.0110000000002,
+    "content_type": "text/html",
+    "title": "CGM ÐÐ¾ÑÐ·Ð°ÐºÑÐ¿ÐºÐ¸ - ÐÐ°ÑÐ±Ð¾ÑÐ´",
+    "scripts_count": 2,
+    "has_app_root": true,
+    "has_vite": true,
+    "pass": true,
+    "errors": []
+  },
+  "map_assets": {
+    "scripts": [],
+    "css": [],
+    "pass": true
+  },
+  "map_proxy": {
+    "status_code": 200,
+    "pass": true,
+    "data": [
+      2024,
+      2025,
+      2026,
+      2027,
+      2028,
+      2029,
+      2030,
+      2031,
+      2032,
+      2033,
+      2034
+    ]
+  },
+  "map_cors": {
+    "status_code": 204,
+    "cors_headers": {
+      "Access-Control-Allow-Origin": "http://localhost:5173",
+      "Vary": "Origin, Access-Control-Request-Headers",
+      "Access-Control-Allow-Methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+      "Content-Length": "0",
+      "Date": "Sun, 15 Mar 2026 10:03:59 GMT",
+      "Connection": "keep-alive",
+      "Keep-Alive": "timeout=5"
+    },
+    "pass": true
+  }
+}

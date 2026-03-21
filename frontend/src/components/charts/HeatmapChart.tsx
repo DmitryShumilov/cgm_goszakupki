@@ -1,4 +1,5 @@
 import { Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Box } from '@mui/material';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 
 interface HeatmapChartProps {
   data: {
@@ -28,18 +29,18 @@ export const HeatmapChart = ({ data, loading = false }: HeatmapChartProps) => {
     );
   }
 
-  // Функция для получения цвета ячейки на основе процента
+  // Функция для получения цвета ячейки на основе процента (для тёмной темы)
   const getCellColor = (pct: number): string => {
-    if (pct === 0) return '#f5f5f5';
-    if (pct <= 10) return '#bbdefb';
-    if (pct <= 25) return '#64b5f6';
-    if (pct <= 50) return '#1976d2';
-    if (pct <= 75) return '#0d47a1';
-    return '#002171';
+    if (pct === 0) return 'rgba(255, 255, 255, 0.05)';
+    if (pct <= 10) return 'rgba(0, 180, 219, 0.3)';
+    if (pct <= 25) return 'rgba(0, 180, 219, 0.5)';
+    if (pct <= 50) return 'rgba(0, 180, 219, 0.7)';
+    if (pct <= 75) return 'rgba(0, 180, 219, 0.85)';
+    return 'rgba(0, 180, 219, 1)';
   };
 
   const getTextColor = (pct: number): string => {
-    return pct > 50 ? '#ffffff' : '#000000';
+    return pct > 25 ? '#ffffff' : 'rgba(255, 255, 255, 0.7)';
   };
 
   // Сокращаем названия месяцев для отображения
@@ -98,18 +99,18 @@ export const HeatmapChart = ({ data, loading = false }: HeatmapChartProps) => {
   const displayProducts = data.products.slice(0, 15);
 
   return (
-    <Paper sx={{ p: 2, overflow: 'auto' }}>
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          fontWeight: 600, 
-          fontSize: '11px', 
-          mb: 1, 
-          pb: 1, 
+    <Paper sx={{ p: 2, overflow: 'auto', background: 'rgba(15, 12, 41, 0.95)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.1)' }} role="region" aria-label="Тепловая карта доли по месяцам">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 600,
+          fontSize: '11px',
+          mb: 1,
+          pb: 1,
           borderBottom: '2px solid #FF5722',
           letterSpacing: '0.5px',
           textTransform: 'uppercase',
-          color: 'rgba(0, 0, 0, 0.7)',
+          color: 'rgba(255, 255, 255, 0.85)',
         }}
       >
         🔥 Доля по месяцам (%)
@@ -118,20 +119,23 @@ export const HeatmapChart = ({ data, loading = false }: HeatmapChartProps) => {
         <Table size="small" sx={{ minWidth: 800 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', left: 0, bgcolor: 'grey.100', zIndex: 1 }}>
+              <TableCell sx={{ fontWeight: 'bold', position: 'sticky', left: 0, bgcolor: 'rgba(15, 12, 41, 0.95)', zIndex: 1, color: 'rgba(255, 255, 255, 0.85)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                 Товар
               </TableCell>
               {displayMonths.map((month) => (
                 <TableCell
                   key={month}
                   align="center"
-                  sx={{ fontWeight: 'bold', minWidth: 40 }}
+                  sx={{ fontWeight: 'bold', minWidth: 40, color: 'rgba(255, 255, 255, 0.85)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}
                 >
                   {month}
                 </TableCell>
               ))}
-              <TableCell sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }} align="center">
+              <TableCell sx={{ fontWeight: 'bold', bgcolor: 'rgba(15, 12, 41, 0.95)', color: 'rgba(255, 255, 255, 0.85)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }} align="center">
                 Итого
+              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold', bgcolor: 'rgba(15, 12, 41, 0.95)', color: 'rgba(255, 255, 255, 0.85)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', minWidth: 100 }} align="center">
+                📈 Тренд
               </TableCell>
             </TableRow>
           </TableHead>
@@ -148,12 +152,13 @@ export const HeatmapChart = ({ data, loading = false }: HeatmapChartProps) => {
                       sx={{
                         position: 'sticky',
                         left: 0,
-                        bgcolor: 'background.paper',
+                        bgcolor: 'rgba(15, 12, 41, 0.95)',
                         zIndex: 1,
                         maxWidth: 200,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
+                        color: 'rgba(255, 255, 255, 0.85)',
                       }}
                     >
                       <Tooltip title={row.product as string}>
@@ -201,7 +206,7 @@ export const HeatmapChart = ({ data, loading = false }: HeatmapChartProps) => {
                         </TableCell>
                       );
                     })}
-                    <TableCell align="center" sx={{ bgcolor: 'transparent', py: 0.5, px: 0.25 }}>
+                    <TableCell align="center" sx={{ py: 0.5, px: 0.25 }}>
                       <Box
                         sx={{
                           width: '100%',
@@ -209,19 +214,48 @@ export const HeatmapChart = ({ data, loading = false }: HeatmapChartProps) => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          bgcolor: '#E3F2FD',
+                          bgcolor: 'rgba(0, 180, 219, 0.4)',
                           borderRadius: 6,
-                          color: '#0D47A1',
+                          color: '#FFFFFF',
                           fontWeight: 'bold',
                           fontSize: '11px',
                           transition: 'all 0.2s ease',
                           '&:hover': {
                             transform: 'scale(1.05)',
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                           },
                         }}
                       >
                         {row['total_pct']}%
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center" sx={{ py: 0.5, px: 0.25, minWidth: 100 }}>
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={Array.from({ length: 12 }, (_, i) => ({
+                              month: i,
+                              value: row[i] as number || 0,
+                            }))}
+                          >
+                            <Line
+                              type="monotone"
+                              dataKey="value"
+                              stroke="#00B4DB"
+                              strokeWidth={2}
+                              dot={false}
+                              isAnimationActive={false}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
                       </Box>
                     </TableCell>
                   </TableRow>

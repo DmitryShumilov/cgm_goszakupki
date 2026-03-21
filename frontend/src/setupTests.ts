@@ -18,9 +18,11 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// Mock для ResizeObserver
-(window as any).ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock для ResizeObserver (исправлено для Recharts)
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+(window as any).ResizeObserver = MockResizeObserver;

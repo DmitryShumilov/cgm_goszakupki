@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Скрипт остановки CGM Dashboard проекта.
     
@@ -116,7 +116,7 @@ $frontendStopped = $false
 if (Test-Path $PidFile) {
     try {
         $pids = Get-Content $PidFile | ConvertFrom-Json
-        
+
         if ($pids.backend) {
             Write-Info "Backend PID: $($pids.backend)"
             try {
@@ -140,7 +140,7 @@ if (Test-Path $PidFile) {
                 $backendStopped = $true
             }
         }
-        
+
         if ($pids.frontend) {
             Write-Info "Frontend PID: $($pids.frontend)"
             try {
@@ -164,11 +164,53 @@ if (Test-Path $PidFile) {
                 $frontendStopped = $true
             }
         }
-        
+
+        if ($pids.frontend_map) {
+            Write-Info "Frontend Map PID: $($pids.frontend_map)"
+            try {
+                $process = Get-Process -Id $pids.frontend_map -ErrorAction Stop
+                if (!$Force) {
+                    $confirmation = Read-Host "Остановить frontend_map (PID: $($pids.frontend_map))? [Y/n]"
+                    if ($confirmation -eq "n" -or $confirmation -eq "N") {
+                        Write-Info "Пропущена остановка frontend_map"
+                    } else {
+                        Stop-Process -Id $pids.frontend_map -Force -ErrorAction SilentlyContinue
+                        Write-Success "Frontend Map остановлен"
+                    }
+                } else {
+                    Stop-Process -Id $pids.frontend_map -Force -ErrorAction SilentlyContinue
+                    Write-Success "Frontend Map остановлен (принудительно)"
+                }
+            } catch {
+                Write-Info "Frontend Map уже не запущен"
+            }
+        }
+
+        if ($pids.frontend_compare) {
+            Write-Info "Frontend Compare PID: $($pids.frontend_compare)"
+            try {
+                $process = Get-Process -Id $pids.frontend_compare -ErrorAction Stop
+                if (!$Force) {
+                    $confirmation = Read-Host "Остановить frontend_compare (PID: $($pids.frontend_compare))? [Y/n]"
+                    if ($confirmation -eq "n" -or $confirmation -eq "N") {
+                        Write-Info "Пропущена остановка frontend_compare"
+                    } else {
+                        Stop-Process -Id $pids.frontend_compare -Force -ErrorAction SilentlyContinue
+                        Write-Success "Frontend Compare остановлен"
+                    }
+                } else {
+                    Stop-Process -Id $pids.frontend_compare -Force -ErrorAction SilentlyContinue
+                    Write-Success "Frontend Compare остановлен (принудительно)"
+                }
+            } catch {
+                Write-Info "Frontend Compare уже не запущен"
+            }
+        }
+
         # Удаление PID файла
         Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
         Write-Success "PID файл удалён"
-        
+
     } catch {
         Write-Warning-Custom "Ошибка чтения PID файла: $_"
     }
@@ -254,6 +296,14 @@ if ($frontendPort) {
     Write-Warning-Custom "Порт 5173 всё ещё занят. Frontend может завершаться."
 } else {
     Write-Success "Порт 5173 свободен"
+}
+
+# Проверка порта 5174 (frontend_map)
+$frontendMapPort = Get-NetTCPConnection -LocalPort 5174 -ErrorAction SilentlyContinue
+if ($frontendMapPort) {
+    Write-Warning-Custom "Порт 5174 всё ещё занят. Frontend Map может завершаться."
+} else {
+    Write-Success "Порт 5174 свободен"
 }
 
 # -----------------------------------------------------------------------------

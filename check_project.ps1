@@ -19,6 +19,7 @@ param(
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendDir = Join-Path $ScriptDir "backend"
 $FrontendDir = Join-Path $ScriptDir "frontend"
+$FrontendMapDir = Join-Path $ScriptDir "frontend_map"
 $EnvFile = Join-Path $ScriptDir ".env"
 
 $Stats = @{ Passed = 0; Failed = 0; Warnings = 0 }
@@ -37,6 +38,23 @@ function Get-EnvValue {
         $line = Get-Content $EnvFile | Select-String "^$Key="
         if ($line) { return ($line -split "=", 2)[1] }
     }
+    return $null
+}
+
+function Get-PostgresPath {
+    # Проверка стандартных путей установки
+    $paths = @(
+        "C:\Program Files\PostgreSQL\17\bin",
+        "C:\Program Files\PostgreSQL\16\bin",
+        "C:\Program Files\PostgreSQL\15\bin",
+        "C:\Program Files\PostgreSQL\14\bin"
+    )
+    foreach ($p in $paths) {
+        if (Test-Path "$p\psql.exe") { return $p }
+    }
+    # Поиск через where.exe
+    $result = where.exe psql 2>$null
+    if ($result) { return Split-Path $result[0] }
     return $null
 }
 
@@ -98,23 +116,30 @@ $postgresPassword = Get-EnvValue "POSTGRES_PASSWORD"
 $postgresDatabase = Get-EnvValue "POSTGRES_DATABASE"
 
 if ($postgresPassword) {
-    $env:PGPASSWORD = $postgresPassword
-    try {
-        $result = & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -U postgres -d $postgresDatabase -c "SELECT 1" 2>&1
-        if ($result -like "*row*" -or $result -notlike "*error*") {
-            Write-Pass "PostgreSQL: connected to $postgresDatabase"
-            try {
-                $result2 = & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -U postgres -d $postgresDatabase -c "SELECT COUNT(*) FROM purchases" 2>&1
-                if ($result2 -match "(\d+)") {
-                    Write-Pass "Table purchases: $($Matches[1]) records"
-                }
-            } catch { Write-Info "Could not check purchases table" }
-        } else {
-            Write-Fail "PostgreSQL: connection error"
+    $pgPath = Get-PostgresPath
+    if ($pgPath) {
+        $env:PGPASSWORD = $postgresPassword
+        $psqlExe = Join-Path $pgPath "psql.exe"
+        try {
+            $result = & $psqlExe -h localhost -U postgres -d $postgresDatabase -c "SELECT 1" 2>&1
+            if ($result -like "*row*" -or $result -notlike "*error*") {
+                Write-Pass "PostgreSQL: connected to $postgresDatabase"
+                try {
+                    $result2 = & $psqlExe -h localhost -U postgres -d $postgresDatabase -c "SELECT COUNT(*) FROM purchases" 2>&1
+                    if ($result2 -match "(\d+)") {
+                        Write-Pass "Table purchases: $($Matches[1]) records"
+                    }
+                } catch { Write-Info "Could not check purchases table" }
+            } else {
+                Write-Fail "PostgreSQL: connection error"
+                $OverallStatus = "FAIL"
+            }
+        } catch {
+            Write-Fail "PostgreSQL not available"
             $OverallStatus = "FAIL"
         }
-    } catch {
-        Write-Fail "PostgreSQL not available"
+    } else {
+        Write-Fail "PostgreSQL executable not found"
         $OverallStatus = "FAIL"
     }
 } else {
@@ -178,27 +203,69 @@ if (Test-Path $nodeModules) {
     Write-Info "Run: cd frontend && npm install"
 }
 
-$mainTsx = Join-Path $FrontendDir "src\main.tsx"
+$mainTsx = Join-Path $FrontendDir "src/main.tsx"
 if (Test-Path $mainTsx) { Write-Pass "main.tsx found" }
 else {
     Write-Fail "main.tsx not found"
     $OverallStatus = "FAIL"
 }
 
+# Section 5б: Frontend Map
+Write-Section "5б. Frontend Map (Карта регионов)"
+
+$packageJsonMap = Join-Path $FrontendMapDir "package.json"
+$nodeModulesMap = Join-Path $FrontendMapDir "node_modules"
+
+if (Test-Path $FrontendMapDir) {
+    Write-Pass "frontend_map directory found"
+    
+    if (Test-Path $packageJsonMap) { Write-Pass "package.json found" }
+    else {
+        Write-Warn "package.json not found"
+    }
+
+    if (Test-Path $nodeModulesMap) {
+        Write-Pass "node_modules found"
+        $requiredNpmPackagesMap = @("react", "vite", "leaflet", "react-leaflet")
+        foreach ($pkg in $requiredNpmPackagesMap) {
+            $pkgPath = Join-Path $nodeModulesMap $pkg
+            if (Test-Path $pkgPath) { Write-Pass "${pkg}: installed" }
+            else { Write-Fail "${pkg} not installed" }
+        }
+    } else {
+        Write-Warn "node_modules not found"
+        Write-Info "Run: cd frontend_map && npm install"
+    }
+
+    $mainTsxMap = Join-Path $FrontendMapDir "src/main.tsx"
+    if (Test-Path $mainTsxMap) { Write-Pass "main.tsx found" }
+    else {
+        Write-Fail "main.tsx not found"
+        $OverallStatus = "FAIL"
+    }
+} else {
+    Write-Warn "frontend_map directory not found"
+}
+
 # Section 6: Running services
 if (!$Quick) {
     Write-Section "6. Running Services"
-    
+
     try {
         $response = Invoke-RestMethod -Uri "http://localhost:8000/api/health" -Method Get -ErrorAction Stop
         Write-Pass "Backend API: running (status: $($response.status))"
     } catch { Write-Info "Backend API: not running" }
-    
+
     try {
         $response = Invoke-RestMethod -Uri "http://localhost:5173" -Method Get -ErrorAction Stop
         Write-Pass "Frontend: running"
     } catch { Write-Info "Frontend: not running" }
-    
+
+    try {
+        $response = Invoke-RestMethod -Uri "http://localhost:5174" -Method Get -ErrorAction Stop
+        Write-Pass "Frontend Map: running"
+    } catch { Write-Info "Frontend Map: not running" }
+
     try {
         $response = Invoke-RestMethod -Uri "http://localhost:8000/docs" -Method Get -ErrorAction Stop
         Write-Pass "Swagger UI: available"

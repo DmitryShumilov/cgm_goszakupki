@@ -1,0 +1,240 @@
+{
+  "connection": {
+    "pass": true,
+    "host": "localhost",
+    "port": 5432,
+    "database": "cgm_dashboard",
+    "user": "postgres",
+    "error": null,
+    "server_version": "PostgreSQL 17.2 on x86_64-windows, compiled by msvc-19.41.34123, 64-bit",
+    "connection_time_ms": 62.408
+  },
+  "tables": {
+    "tables": {
+      "purchases": {
+        "exists": true,
+        "pass": true
+      }
+    },
+    "pass": true,
+    "all_tables": [
+      "purchases"
+    ],
+    "stats": {
+      "purchases": 1802
+    }
+  },
+  "structure": {
+    "pass": true,
+    "columns": [
+      "id",
+      "customer_name",
+      "region",
+      "what_purchased",
+      "price_rub",
+      "quantity",
+      "amount_rub",
+      "distributor",
+      "year",
+      "purchase_date",
+      "purchase_month"
+    ],
+    "required_columns": [
+      "id",
+      "year",
+      "purchase_month",
+      "purchase_date",
+      "region",
+      "customer_name",
+      "distributor",
+      "what_purchased",
+      "quantity",
+      "amount_rub"
+    ],
+    "missing_columns": [],
+    "column_details": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": false,
+        "max_length": null,
+        "precision": 32
+      },
+      {
+        "name": "customer_name",
+        "type": "text",
+        "nullable": false,
+        "max_length": null,
+        "precision": null
+      },
+      {
+        "name": "region",
+        "type": "text",
+        "nullable": false,
+        "max_length": null,
+        "precision": null
+      },
+      {
+        "name": "what_purchased",
+        "type": "text",
+        "nullable": true,
+        "max_length": null,
+        "precision": null
+      },
+      {
+        "name": "price_rub",
+        "type": "real",
+        "nullable": true,
+        "max_length": null,
+        "precision": 24
+      },
+      {
+        "name": "quantity",
+        "type": "real",
+        "nullable": true,
+        "max_length": null,
+        "precision": 24
+      },
+      {
+        "name": "amount_rub",
+        "type": "real",
+        "nullable": false,
+        "max_length": null,
+        "precision": 24
+      },
+      {
+        "name": "distributor",
+        "type": "text",
+        "nullable": true,
+        "max_length": null,
+        "precision": null
+      },
+      {
+        "name": "year",
+        "type": "integer",
+        "nullable": true,
+        "max_length": null,
+        "precision": 32
+      },
+      {
+        "name": "purchase_date",
+        "type": "date",
+        "nullable": false,
+        "max_length": null,
+        "precision": null
+      },
+      {
+        "name": "purchase_month",
+        "type": "text",
+        "nullable": false,
+        "max_length": null,
+        "precision": null
+      }
+    ],
+    "indexes": [
+      {
+        "name": "purchases_pkey",
+        "definition": "CREATE UNIQUE INDEX purchases_pkey ON public.purchases USING btree (id)"
+      },
+      {
+        "name": "idx_year",
+        "definition": "CREATE INDEX idx_year ON public.purchases USING btree (year)"
+      },
+      {
+        "name": "idx_month",
+        "definition": "CREATE INDEX idx_month ON public.purchases USING btree (purchase_month)"
+      },
+      {
+        "name": "idx_region",
+        "definition": "CREATE INDEX idx_region ON public.purchases USING btree (region)"
+      },
+      {
+        "name": "idx_customer",
+        "definition": "CREATE INDEX idx_customer ON public.purchases USING btree (customer_name)"
+      },
+      {
+        "name": "idx_distributor",
+        "definition": "CREATE INDEX idx_distributor ON public.purchases USING btree (distributor)"
+      },
+      {
+        "name": "idx_what_purchased",
+        "definition": "CREATE INDEX idx_what_purchased ON public.purchases USING btree (what_purchased)"
+      }
+    ]
+  },
+  "integrity": {
+    "pass": true,
+    "checks": {
+      "total_records": {
+        "value": 1802,
+        "pass": true
+      },
+      "year_nulls": {
+        "value": 1,
+        "percentage": 0.05549389567147614,
+        "pass": false
+      },
+      "region_nulls": {
+        "value": 0,
+        "percentage": 0.0,
+        "pass": true
+      },
+      "customer_name_nulls": {
+        "value": 0,
+        "percentage": 0.0,
+        "pass": true
+      },
+      "amount_rub_nulls": {
+        "value": 0,
+        "percentage": 0.0,
+        "pass": true
+      },
+      "purchase_date_nulls": {
+        "value": 0,
+        "percentage": 0.0,
+        "pass": true
+      },
+      "year_range": {
+        "min": 2024,
+        "max": 2034,
+        "pass": true
+      },
+      "amount_stats": {
+        "min": 389.6,
+        "max": 588000000.0,
+        "avg": 13036672.64325007,
+        "total": 23492071000.0,
+        "pass": true
+      },
+      "negative_amounts": {
+        "value": 0,
+        "pass": true
+      }
+    }
+  },
+  "performance": {
+    "pass": true,
+    "queries": [
+      {
+        "name": "Simple COUNT",
+        "duration_ms": 3.336,
+        "pass": true
+      },
+      {
+        "name": "SUM with GROUP BY",
+        "duration_ms": 0.983,
+        "pass": true
+      },
+      {
+        "name": "Date range filter",
+        "duration_ms": 0.574,
+        "pass": true
+      },
+      {
+        "name": "Aggregation",
+        "duration_ms": 0.379,
+        "pass": true
+      }
+    ]
+  }
+}

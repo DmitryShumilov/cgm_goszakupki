@@ -61,24 +61,24 @@ export const DynamicsChart = ({ data, loading = false }: DynamicsChartProps) => 
   };
 
   return (
-    <Paper sx={{ 
-      p: 3, 
+    <Paper sx={{
+      p: 3,
       height: 400,
-      background: 'rgba(255, 255, 255, 0.98)',
+      background: 'rgba(15, 12, 41, 0.95)',
       backdropFilter: 'blur(20px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-    }}>
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          fontWeight: 600, 
-          fontSize: '11px', 
-          mb: 1, 
-          pb: 1, 
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+    }} role="region" aria-label="Диаграмма объёма закупок по месяцам">
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 600,
+          fontSize: '11px',
+          mb: 1,
+          pb: 1,
           borderBottom: '2px solid #00B4DB',
           letterSpacing: '0.5px',
           textTransform: 'uppercase',
-          color: 'rgba(0, 0, 0, 0.7)',
+          color: 'rgba(255, 255, 255, 0.85)',
         }}
       >
         📈 Объём закупок
@@ -91,38 +91,39 @@ export const DynamicsChart = ({ data, loading = false }: DynamicsChartProps) => 
               <stop offset="95%" stopColor="#00B4DB" stopOpacity={0.4}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
-          <XAxis 
-            dataKey="name" 
-            tick={{ fontSize: 11, fill: '#666666' }}
-            axisLine={{ stroke: '#E0E0E0' }}
-            tickLine={{ stroke: '#E0E0E0' }}
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.15)" vertical={false} />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 11, fill: 'rgba(255, 255, 255, 0.7)' }}
+            axisLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
+            tickLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
           />
           <YAxis
             yAxisId="left"
             orientation="left"
             tickFormatter={formatAmount}
-            tick={{ fontSize: 10, fill: '#666666' }}
-            axisLine={{ stroke: '#E0E0E0' }}
-            tickLine={{ stroke: '#E0E0E0' }}
+            tick={{ fontSize: 10, fill: 'rgba(255, 255, 255, 0.7)' }}
+            axisLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
+            tickLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
             tickFormatter={formatQuantity}
-            tick={{ fontSize: 10, fill: '#666666' }}
-            axisLine={{ stroke: '#E0E0E0' }}
-            tickLine={{ stroke: '#E0E0E0' }}
+            tick={{ fontSize: 10, fill: 'rgba(255, 255, 255, 0.7)' }}
+            axisLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
+            tickLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
           />
           <Tooltip
             contentStyle={{
-              background: 'rgba(255, 255, 255, 0.98)',
-              border: 'none',
+              background: 'rgba(26, 58, 92, 0.98)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: 12,
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
               fontFamily: "'Inter', sans-serif",
               fontSize: '12px',
               fontWeight: '500',
+              color: '#FFFFFF',
             }}
             formatter={(value, name) => {
               const numValue = Number(value) || 0;
@@ -132,11 +133,12 @@ export const DynamicsChart = ({ data, loading = false }: DynamicsChartProps) => 
             }}
             labelFormatter={(label) => `Месяц: ${label}`}
           />
-          <Legend 
-            wrapperStyle={{ 
+          <Legend
+            wrapperStyle={{
               paddingTop: '10px',
               fontSize: '12px',
-            }} 
+              color: 'rgba(255, 255, 255, 0.7)',
+            }}
           />
           <Bar
             yAxisId="left"
@@ -152,7 +154,7 @@ export const DynamicsChart = ({ data, loading = false }: DynamicsChartProps) => 
             name="Количество"
             stroke="#FF9500"
             strokeWidth={3}
-            dot={{ fill: '#FFFFFF', stroke: '#FF9500', strokeWidth: 2, r: 4 }}
+            dot={{ fill: 'rgba(15, 12, 41, 0.95)', stroke: '#FF9500', strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6, strokeWidth: 0 }}
           />
         </ComposedChart>

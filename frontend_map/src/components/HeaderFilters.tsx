@@ -117,69 +117,24 @@ export const HeaderFilters = ({ onFiltersChange, regionCount }: HeaderFiltersPro
             },
           },
         }}
-        renderOption={(props, option, { selected }) => {
-          const allSelected = selectedYears.length === availableYears.length && availableYears.length > 0;
-          const isFirstOption = option === availableYears[0];
-          
-          // Первая опция - "Выбрать всё"
-          if (isFirstOption) {
-            return (
-              <Box
-                key="select-all"
-                onClick={() => {
-                  if (allSelected) {
-                    availableYears.forEach(y => toggleYear(y));
-                  } else {
-                    availableYears.forEach(y => {
-                      if (!selectedYears.includes(y)) toggleYear(y);
-                    });
-                  }
-                }}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  cursor: 'pointer',
-                  borderBottom: '1px solid rgba(255,255,255,0.2)',
-                  fontWeight: 600,
-                  backgroundColor: 'rgba(51, 136, 255, 0.15)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(51, 136, 255, 0.25)',
-                  },
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  readOnly
-                  style={{ marginRight: 8, accentColor: '#3388ff', pointerEvents: 'none' }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                {allSelected ? 'Сбросить всё' : 'Выбрать всё'}
-              </Box>
-            );
-          }
-          
-          // Остальные опции - годы
-          return (
-            <li {...props}>
-              <input
-                type="checkbox"
-                checked={selected}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  toggleYear(option);
-                }}
-                style={{ marginRight: 8, accentColor: '#3388ff' }}
-              />
-              {option}
-            </li>
-          );
-        }}
+        renderOption={(props, option, { selected }) => (
+          <li {...props}>
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={(e) => {
+                e.stopPropagation();
+                toggleYear(option);
+              }}
+              style={{ marginRight: 8, accentColor: '#3388ff' }}
+            />
+            {option}
+          </li>
+        )}
         renderInput={(params) => (
           <TextField
             {...params}
-            placeholder="Год"
+            placeholder={selectedYears.length === 0 ? 'Год' : undefined}
             InputProps={{
               ...params.InputProps,
               sx: {
@@ -220,27 +175,27 @@ export const HeaderFilters = ({ onFiltersChange, regionCount }: HeaderFiltersPro
 
           return (
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap', alignItems: 'center' }}>
-              {selected.slice(0, 2).map((year) => (
+              {/* Показываем только первый выбранный год */}
+              <Chip
+                key={selected[0]}
+                label={selected[0]}
+                size="small"
+                onDelete={() => toggleYear(selected[0])}
+                sx={{
+                  bgcolor: 'rgba(51, 136, 255, 0.2)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(51, 136, 255, 0.3)',
+                  height: '24px',
+                  '& .MuiChip-deleteIcon': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&:hover': { color: '#ffffff' },
+                  },
+                }}
+              />
+              {/* Счётчик выбранных лет (если больше 1) */}
+              {selected.length > 1 && (
                 <Chip
-                  key={year}
-                  label={year}
-                  size="small"
-                  onDelete={() => toggleYear(year)}
-                  sx={{
-                    bgcolor: 'rgba(51, 136, 255, 0.2)',
-                    color: '#ffffff',
-                    border: '1px solid rgba(51, 136, 255, 0.3)',
-                    height: '24px',
-                    '& .MuiChip-deleteIcon': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      '&:hover': { color: '#ffffff' },
-                    },
-                  }}
-                />
-              ))}
-              {selected.length > 2 && (
-                <Chip
-                  label={`+${selected.length - 2}`}
+                  label={`${selected.length}`}
                   size="small"
                   sx={{
                     bgcolor: 'rgba(51, 136, 255, 0.1)',
@@ -295,7 +250,45 @@ export const HeaderFilters = ({ onFiltersChange, regionCount }: HeaderFiltersPro
             },
           },
         }}
-        renderValue={() => null}
+        renderValue={(selected) => {
+          if (selected.length === 0) return null;
+
+          return (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap', alignItems: 'center' }}>
+              {/* Показываем первый выбранный продукт */}
+              <Chip
+                key={selected[0]}
+                label={selected[0].length > 20 ? `${selected[0].slice(0, 20)}...` : selected[0]}
+                size="small"
+                onDelete={() => toggleProduct(selected[0])}
+                sx={{
+                  bgcolor: 'rgba(51, 136, 255, 0.2)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(51, 136, 255, 0.3)',
+                  height: '24px',
+                  '& .MuiChip-deleteIcon': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&:hover': { color: '#ffffff' },
+                  },
+                }}
+              />
+              {/* Счётчик выбранных продуктов (если больше 1) */}
+              {selected.length > 1 && (
+                <Chip
+                  label={`${selected.length}`}
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(51, 136, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    border: '1px solid rgba(51, 136, 255, 0.2)',
+                    height: '24px',
+                    minWidth: '32px',
+                  }}
+                />
+              )}
+            </Box>
+          );
+        }}
         renderInput={(params) => (
           <TextField
             {...params}
@@ -376,7 +369,45 @@ export const HeaderFilters = ({ onFiltersChange, regionCount }: HeaderFiltersPro
             },
           },
         }}
-        renderValue={() => null}
+        renderValue={(selected) => {
+          if (selected.length === 0) return null;
+
+          return (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap', alignItems: 'center' }}>
+              {/* Показываем первого выбранного поставщика */}
+              <Chip
+                key={selected[0]}
+                label={selected[0].length > 20 ? `${selected[0].slice(0, 20)}...` : selected[0]}
+                size="small"
+                onDelete={() => toggleSupplier(selected[0])}
+                sx={{
+                  bgcolor: 'rgba(51, 136, 255, 0.2)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(51, 136, 255, 0.3)',
+                  height: '24px',
+                  '& .MuiChip-deleteIcon': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&:hover': { color: '#ffffff' },
+                  },
+                }}
+              />
+              {/* Счётчик выбранных поставщиков (если больше 1) */}
+              {selected.length > 1 && (
+                <Chip
+                  label={`${selected.length}`}
+                  size="small"
+                  sx={{
+                    bgcolor: 'rgba(51, 136, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    border: '1px solid rgba(51, 136, 255, 0.2)',
+                    height: '24px',
+                    minWidth: '32px',
+                  }}
+                />
+              )}
+            </Box>
+          );
+        }}
         renderInput={(params) => (
           <TextField
             {...params}

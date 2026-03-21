@@ -60,17 +60,21 @@ function App() {
       filtered = filtered.filter(r => selectedRegions.includes(r.region));
     }
 
-    // В прототипе фильтрация по годам/поставщикам/продуктам не влияет на данные
-    // так как в mockData нет этих полей. В будущем будет реальная фильтрация из БД.
-
     setDisplayedRegionData(filtered);
   }, [regionData, selectedYears, selectedRegions, selectedSuppliers, selectedProducts]);
 
   const selectedRegionData = displayedRegionData.find(r => r.region === selectedRegion) || null;
 
   // Проверка наличия активных фильтров
-  const hasActiveFilters = selectedYears.length > 0 || selectedRegions.length > 0 ||
-                           selectedSuppliers.length > 0 || selectedProducts.length > 0;
+  // Не считаем активными фильтрами значения по умолчанию (когда выбраны ВСЕ доступные)
+  const { availableYears, availableRegions, availableSuppliers, availableProducts } = useFilterStore();
+  
+  const isYearsFiltered = selectedYears.length > 0 && selectedYears.length < availableYears.length;
+  const isRegionsFiltered = selectedRegions.length > 0 && selectedRegions.length < availableRegions.length;
+  const isSuppliersFiltered = selectedSuppliers.length > 0 && selectedSuppliers.length < availableSuppliers.length;
+  const isProductsFiltered = selectedProducts.length > 0 && selectedProducts.length < availableProducts.length;
+  
+  const hasActiveFilters = isYearsFiltered || isRegionsFiltered || isSuppliersFiltered || isProductsFiltered;
 
   // Обработчик изменения фильтров (перезагрузка данных)
   const handleFiltersChange = useCallback(() => {
