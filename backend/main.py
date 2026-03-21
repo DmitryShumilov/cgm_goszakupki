@@ -43,7 +43,7 @@ from slowapi.errors import RateLimitExceeded
 
 # Загрузка переменных окружения из корневого .env
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
-load_dotenv(dotenv_path)
+load_dotenv(dotenv_path, override=True)
 
 # Параметры подключения к PostgreSQL
 DB_CONFIG = {
@@ -55,14 +55,18 @@ DB_CONFIG = {
 }
 
 # ============================================================================
-# Connection Pool для PostgreSQL
+# Connection Pool for PostgreSQL
 # ============================================================================
 
-# Глобальный пул соединений (min 1, max 10)
+# Global connection pool (min 1, max 10)
 connection_pool = psycopg2.pool.SimpleConnectionPool(
-    1,   # minconn — минимальное число соединений
-    10,  # maxconn — максимальное число соединений
-    **DB_CONFIG
+    1,
+    10,
+    host=DB_CONFIG['host'],
+    port=DB_CONFIG['port'],
+    user=DB_CONFIG['user'],
+    password=DB_CONFIG['password'],
+    database=DB_CONFIG['database']
 )
 
 

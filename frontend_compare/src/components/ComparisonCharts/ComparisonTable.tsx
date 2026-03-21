@@ -104,23 +104,37 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ loading }) => 
     if (!data?.rows) return;
 
     const headers = ['Регион', 'Период А (сумма)', 'Период Б (сумма)', 'Период А (контракты)', 'Период Б (контракты)', 'Изменение (сумма)', 'Изменение (%)', 'Тренд'];
+    
+    // ✅ Экранирование полей для CSV (кавычки и запятые)
+    const escapeCsvField = (field: string | number): string => {
+      const str = String(field);
+      // Если поле содержит запятую, кавычку или перенос строки - оборачиваем в кавычки
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
     const csvRows = sortedData.map((row) => [
-      row.region,
-      row.periodA_amount,
-      row.periodB_amount,
-      row.periodA_count,
-      row.periodB_count,
-      row.absoluteDiff,
-      row.percentDiff,
-      row.trend,
+      escapeCsvField(row.region),
+      escapeCsvField(row.periodA_amount),
+      escapeCsvField(row.periodB_amount),
+      escapeCsvField(row.periodA_count),
+      escapeCsvField(row.periodB_count),
+      escapeCsvField(row.absoluteDiff),
+      escapeCsvField(row.percentDiff),
+      escapeCsvField(row.trend),
     ]);
 
-    const csv = [
+    const csvContent = [
       headers.join(','),
       ...csvRows.map((row) => row.join(',')),
     ].join('\n');
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // ✅ Добавляем BOM (Byte Order Mark) для корректного отображения кириллицы в Excel
+    // BOM: EF BB BF в UTF-8
+    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;

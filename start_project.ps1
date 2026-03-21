@@ -46,6 +46,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackendDir = Join-Path $ScriptDir "backend"
 $FrontendDir = Join-Path $ScriptDir "frontend"
 $FrontendMapDir = Join-Path $ScriptDir "frontend_map"
+$FrontendCompareDir = Join-Path $ScriptDir "frontend_compare"
 $EnvFile = Join-Path $ScriptDir ".env"
 $PidFile = Join-Path $ScriptDir ".pids.json"
 $LogDir = Join-Path $ScriptDir "logs"
@@ -160,11 +161,12 @@ function Get-EnvValue {
 }
 
 function Save-Pid {
-    param([int]$BackendPid, [int]$FrontendPid, [int]$FrontendMapPid)
+    param([int]$BackendPid, [int]$FrontendPid, [int]$FrontendMapPid, [int]$FrontendComparePid)
     $pids = @{}
     if ($BackendPid -gt 0) { $pids["backend"] = $BackendPid }
     if ($FrontendPid -gt 0) { $pids["frontend"] = $FrontendPid }
     if ($FrontendMapPid -gt 0) { $pids["frontend_map"] = $FrontendMapPid }
+    if ($FrontendComparePid -gt 0) { $pids["frontend_compare"] = $FrontendComparePid }
     $pids | ConvertTo-Json | Set-Content $PidFile -Encoding UTF8
 }
 
@@ -185,6 +187,10 @@ function Stop-Existing {
         if ($pids.frontend_map) {
             Stop-Process -Id $pids.frontend_map -Force -ErrorAction SilentlyContinue
             Write-Info "Остановлен frontend_map (PID: $($pids.frontend_map))"
+        }
+        if ($pids.frontend_compare) {
+            Stop-Process -Id $pids.frontend_compare -Force -ErrorAction SilentlyContinue
+            Write-Info "Остановлен frontend_compare (PID: $($pids.frontend_compare))"
         }
         Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
     }
@@ -219,11 +225,11 @@ function Stop-Existing {
 # ОСНОВНОЙ СЦЕНАРИЙ
 # ============================================================================
 
-Write-Host "`n"
-Write-Host "╔══════════════════════════════════════════════════════════╗" -ForegroundColor $ColorInfo
-Write-Host "║       CGM Dashboard - Запуск проекта                     ║" -ForegroundColor $ColorInfo
-Write-Host "║       Госзакупки CGM - Дашборд аналитики                 ║" -ForegroundColor $ColorInfo
-Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor $ColorInfo
+Write-Host ""
+Write-Host "========================================" -ForegroundColor $ColorInfo
+Write-Host "   CGM Dashboard - Запуск проекта      " -ForegroundColor $ColorInfo
+Write-Host "   Госзакупки CGM - Дашборд аналитики  " -ForegroundColor $ColorInfo
+Write-Host "========================================" -ForegroundColor $ColorInfo
 
 # -----------------------------------------------------------------------------
 # Шаг 1: Проверка .env файла
@@ -276,7 +282,7 @@ if ($pgOk) {
 } else {
     Write-Error-Custom "PostgreSQL не доступен. Запустите PostgreSQL."
     Write-Info "Команда для запуска:"
-    Write-Host "    & 'C:\Program Files\PostgreSQL\17\bin\pg_ctl.exe' start -D 'C:\pg_data'"
+    Write-Host '    & "C:\Program Files\PostgreSQL\17\bin\pg_ctl.exe" start -D "C:\pg_data"'
     exit 1
 }
 
@@ -410,6 +416,7 @@ if (!$NoBackend) {
 # -----------------------------------------------------------------------------
 $frontendPid = 0
 $frontendMapPid = 0
+$frontendComparePid = 0
 
 if (!$NoFrontend) {
     Write-Step "Шаг 7: Запуск Frontend"
@@ -512,6 +519,70 @@ if (!$NoFrontend) {
     } else {
         Write-Info "frontend_map: директория не найдена, пропускаем"
     }
+
+    # -----------------------------------------------------------------------------
+    # Шаг 7в: Запуск Frontend Compare (Сравнение периодов)
+    # -----------------------------------------------------------------------------
+    Write-Step "Шаг 7в: Запуск Frontend Compare (Сравнение периодов)"
+
+    # Проверка наличия директории frontend_compare
+    if (Test-Path $FrontendCompareDir) {
+        $frontendCompareLog = Join-Path $LogDir "frontend_compare_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+
+        # Проверка наличия package.json
+        if (Test-Path (Join-Path $FrontendCompareDir "package.json")) {
+            # Проверка node_modules
+            $nodeModulesCompare = Join-Path $FrontendCompareDir "node_modules"
+            if (!(Test-Path $nodeModulesCompare)) {
+                Write-Warning-Custom "node_modules не найден в frontend_compare. Установка зависимостей..."
+                Set-Location $FrontendCompareDir
+                npm install
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Frontend Compare зависимости установлены"
+                } else {
+                    Write-Error-Custom "Ошибка установки зависимостей frontend_compare"
+                }
+                Set-Location $ScriptDir
+            }
+
+            # Запуск frontend_compare в фоновом режиме
+            $process = Start-Process npm `
+                -ArgumentList "run", "dev" `
+                -WorkingDirectory $FrontendCompareDir `
+                -PassThru `
+                -WindowStyle Hidden
+
+            $frontendComparePid = $process.Id
+            Write-Info "Frontend Compare запущен с PID: $frontendComparePid"
+
+            # Ожидание запуска frontend_compare
+            Write-Info "Ожидание запуска frontend_compare (до 10 секунд)..."
+            $maxAttempts = 20
+            $attempt = 0
+            $frontendCompareReady = $false
+
+            while ($attempt -lt $maxAttempts) {
+                Start-Sleep -Milliseconds 500
+                try {
+                    $response = Invoke-RestMethod -Uri "http://localhost:5175" -Method Get -ErrorAction Stop
+                    $frontendCompareReady = $true
+                    break
+                } catch {
+                    $attempt++
+                }
+            }
+
+            if ($frontendCompareReady) {
+                Write-Success "Frontend Compare запущен: http://localhost:5175"
+            } else {
+                Write-Warning-Custom "Frontend Compare может запускаться дольше обычного"
+            }
+        } else {
+            Write-Warning-Custom "frontend_compare: package.json не найден, пропускаем"
+        }
+    } else {
+        Write-Info "frontend_compare: директория не найдена, пропускаем"
+    }
 }
 
 # -----------------------------------------------------------------------------
@@ -519,22 +590,25 @@ if (!$NoFrontend) {
 # -----------------------------------------------------------------------------
 Write-Step "Шаг 8: Завершение"
 
-Save-Pid -BackendPid $backendPid -FrontendPid $frontendPid -FrontendMapPid $frontendMapPid
+Save-Pid -BackendPid $backendPid -FrontendPid $frontendPid -FrontendMapPid $frontendMapPid -FrontendComparePid $frontendComparePid
 Write-Success "PID процессов сохранены в .pids.json"
 
-Write-Host "`n"
-Write-Host "╔══════════════════════════════════════════════════════════╗" -ForegroundColor $ColorSuccess
-Write-Host "║              ПРОЕКТ УСПЕШНО ЗАПУЩЕН!                     ║" -ForegroundColor $ColorSuccess
-Write-Host "╠══════════════════════════════════════════════════════════╣" -ForegroundColor $ColorSuccess
+Write-Host ""
+Write-Host "========================================" -ForegroundColor $ColorSuccess
+Write-Host "    ПРОЕКТ УСПЕШНО ЗАПУЩЕН!            " -ForegroundColor $ColorSuccess
+Write-Host "========================================" -ForegroundColor $ColorSuccess
 if (!$NoBackend) {
-    Write-Host "║  Backend API:    http://localhost:8000                     ║" -ForegroundColor $ColorInfo
-    Write-Host "║  Swagger:        http://localhost:8000/docs                ║" -ForegroundColor $ColorInfo
+    Write-Host "  Backend API:    http://localhost:8000" -ForegroundColor $ColorInfo
+    Write-Host "  Swagger:        http://localhost:8000/docs" -ForegroundColor $ColorInfo
 }
 if (!$NoFrontend) {
-    Write-Host "║  Frontend:       http://localhost:5173                     ║" -ForegroundColor $ColorInfo
-    Write-Host "║  Frontend Map:   http://localhost:5174                     ║" -ForegroundColor $ColorInfo
+    Write-Host "  Frontend:         http://localhost:5173" -ForegroundColor $ColorInfo
+    Write-Host "  Frontend Map:     http://localhost:5174" -ForegroundColor $ColorInfo
+    Write-Host "  Frontend Compare: http://localhost:5175" -ForegroundColor $ColorInfo
 }
-Write-Host "╠══════════════════════════════════════════════════════════╣" -ForegroundColor $ColorSuccess
-Write-Host "║  Для остановки выполните: .\stop_project.ps1             ║" -ForegroundColor $ColorWarning
-Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor $ColorSuccess
-Write-Host "`n"
+Write-Host "========================================" -ForegroundColor $ColorSuccess
+Write-Host "  Для остановки выполните: .\stop_project.ps1" -ForegroundColor $ColorWarning
+Write-Host "========================================" -ForegroundColor $ColorSuccess
+Write-Host ""
+
+

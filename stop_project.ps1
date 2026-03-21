@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Скрипт остановки CGM Dashboard проекта.
     
@@ -183,6 +183,27 @@ if (Test-Path $PidFile) {
                 }
             } catch {
                 Write-Info "Frontend Map уже не запущен"
+            }
+        }
+
+        if ($pids.frontend_compare) {
+            Write-Info "Frontend Compare PID: $($pids.frontend_compare)"
+            try {
+                $process = Get-Process -Id $pids.frontend_compare -ErrorAction Stop
+                if (!$Force) {
+                    $confirmation = Read-Host "Остановить frontend_compare (PID: $($pids.frontend_compare))? [Y/n]"
+                    if ($confirmation -eq "n" -or $confirmation -eq "N") {
+                        Write-Info "Пропущена остановка frontend_compare"
+                    } else {
+                        Stop-Process -Id $pids.frontend_compare -Force -ErrorAction SilentlyContinue
+                        Write-Success "Frontend Compare остановлен"
+                    }
+                } else {
+                    Stop-Process -Id $pids.frontend_compare -Force -ErrorAction SilentlyContinue
+                    Write-Success "Frontend Compare остановлен (принудительно)"
+                }
+            } catch {
+                Write-Info "Frontend Compare уже не запущен"
             }
         }
 

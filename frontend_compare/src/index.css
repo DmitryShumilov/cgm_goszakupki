@@ -138,21 +138,55 @@ body {
   display: none !important;
 }
 
+/* ✅ Классы для разделения страниц при экспорте в PDF */
+.pdf-page-break-after {
+  page-break-after: always !important;
+  break-after: page !important;
+}
+
+.pdf-page-break-before {
+  page-break-before: always !important;
+  break-before: page !important;
+}
+
+.pdf-no-break-inside {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+/* ✅ Принудительный фон для экспорта PDF */
+.export-with-background {
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%) !important;
+  color: #ffffff !important;
+}
+
+.export-with-background * {
+  color: inherit !important;
+}
+
 @media print {
   body {
     background: white !important;
   }
-  
+
   .MuiPaper-root {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
-}
 
-.export-page-break {
-  page-break-before: always;
-}
+  /* ✅ Принудительное разделение страниц для печати */
+  .filters-section {
+    page-break-after: always;
+    break-after: page;
+  }
 
-.export-no-break {
-  page-break-inside: avoid;
+  .kpi-section {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .table-section {
+    page-break-before: always;
+    break-before: page;
+  }
 }

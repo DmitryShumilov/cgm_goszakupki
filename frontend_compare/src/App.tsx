@@ -159,14 +159,18 @@ const DashboardContent = () => {
         <Toolbar />
         <Container maxWidth="xl">
           <Box id="dashboard-content">
-            {/* Фильтры периодов */}
-            <PeriodFilters />
+            {/* Фильтры периодов - Страница 1 */}
+            <Box className="filters-section" sx={{ mb: 3 }}>
+              <PeriodFilters />
+            </Box>
 
-            {/* KPI Panel с индикаторами */}
-            <ComparisonKpiPanel />
+            {/* KPI Panel с индикаторами - Страница 2 */}
+            <Box className="kpi-section" sx={{ mb: 3 }}>
+              <ComparisonKpiPanel />
+            </Box>
 
-            {/* Таблица сравнения */}
-            <Box sx={{ mt: 3 }}>
+            {/* Таблица сравнения - Страница 3+ */}
+            <Box className="table-section" sx={{ mt: 3 }}>
               <ComparisonTable />
             </Box>
           </Box>

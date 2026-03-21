@@ -119,13 +119,14 @@ POSTGRES_PASSWORD=ваш_пароль
 .\start_project.ps1
 ```
 
-После запуска откройте в браузере:
+**После запуска откройте в браузере:**
 
-| Компонент | URL |
-|-----------|-----|
-| **Дашборд** | http://localhost:5173 |
-| **API** | http://localhost:8000 |
-| **Swagger** | http://localhost:8000/docs |
+| Дашборд | Порт | URL |
+|---------|------|-----|
+| **Основной** | 5173 | http://localhost:5173 |
+| **Карта регионов** | 5174 | http://localhost:5174 |
+| **Сравнение периодов** | 5175 | http://localhost:5175 |
+| **API Swagger** | 8000 | http://localhost:8000/docs |
 
 ---
 
@@ -158,10 +159,20 @@ cgm_goszakupki/
 │   │   └── requirements.txt   # Python зависимости
 │
 ├── 🌐 Frontend (React/Vite)
-│   ├── frontend/
-│   │   ├── src/               # Исходный код
-│   │   ├── package.json       # Node.js зависимости
-│   │   └── vite.config.ts     # Конфигурация Vite
+│   ├── frontend/                 # Основной дашборд (порт 5173)
+│   │   ├── src/                  # Исходный код
+│   │   ├── package.json          # Node.js зависимости
+│   │   └── vite.config.ts        # Конфигурация Vite
+│   │
+│   ├── frontend_map/             # Карта регионов (порт 5174)
+│   │   ├── src/                  # Компоненты карты
+│   │   ├── package.json          # Node.js зависимости
+│   │   └── vite.config.ts        # Конфигурация Vite
+│   │
+│   └── frontend_compare/         # Сравнение периодов (порт 5175) 🆕
+│       ├── src/                  # Компоненты сравнения
+│       ├── package.json          # Node.js зависимости
+│       └── vite.config.ts        # Конфигурация Vite
 │
 └── 📚 Документация
     ├── README.md              # Основная документация

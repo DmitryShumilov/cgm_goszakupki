@@ -4,6 +4,47 @@
 
 ---
 
+## [1.5.1] - 2026-03-21
+
+### 🔧 Автоматизация запуска Comparison Dashboard
+
+**Дата:** 21 марта 2026
+
+**Статус:** ✅ Выполнено
+
+#### Изменения
+
+**PowerShell скрипты:**
+- ✅ `start_project.ps1` — Автоматический запуск frontend_compare (порт 5175)
+- ✅ `stop_project.ps1` — Корректная остановка frontend_compare
+- ✅ `.env` — Добавлен `http://localhost:5175` в `ALLOWED_ORIGINS`
+
+**Обновления в start_project.ps1:**
+- Добавлена переменная `$FrontendCompareDir`
+- Обновлена функция `Save-Pid` (поддержка frontend_compare)
+- Обновлена функция `Stop-Existing` (остановка frontend_compare)
+- Добавлен **Шаг 7в**: Запуск Frontend Compare
+- Обновлён вывод: отображение всех 3 дашбордов
+
+**Обновления в stop_project.ps1:**
+- Добавлена остановка frontend_compare из PID файла
+
+---
+
+**Теперь все 3 дашборда запускаются автоматически:**
+
+```powershell
+.\start_project.ps1
+```
+
+| Дашборд | Порт | URL |
+|---------|------|-----|
+| Основной | 5173 | http://localhost:5173 |
+| Карта регионов | 5174 | http://localhost:5174 |
+| Сравнение периодов | 5175 | http://localhost:5175 |
+
+---
+
 ## [1.5.0] - 2026-03-19
 
 ### 🆕 Дашборд сравнения периодов — Production Ready
