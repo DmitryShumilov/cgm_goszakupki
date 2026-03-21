@@ -4,6 +4,55 @@
 
 ---
 
+## [1.5.2] - 2026-03-21
+
+### 🔧 Исправление frontend_map: Доступ по локальной сети
+
+**Дата:** 21 марта 2026
+
+**Статус:** ✅ Выполнено
+
+#### Проблемы
+
+**1. API_BASE_URL в client.ts:**
+- ❌ `import.meta.env.VITE_API_URL || ''` — пустой baseURL
+- ❌ При доступе по сети запросы шли на `http://192.168.x.x:8000`
+- ❌ Backend на другом компьютере не запущен → ошибки
+
+**2. Дублирование `/api` в mapApi.ts:**
+- ❌ `baseURL: '/api'` + `get('/api/map/regions')` = `/api/api/map/regions`
+- ❌ Ошибки 404 (Not Found)
+
+#### Решение
+
+**frontend_map/src/api/client.ts:**
+```typescript
+// ✅ Явный путь для работы через Vite proxy
+const API_BASE_URL = '/api';
+```
+
+**frontend_map/src/api/mapApi.ts:**
+```typescript
+// ✅ Убрано дублирование /api
+getRegions: async () => {
+  const response = await apiClient.get('/map/regions', ...);
+  // Было: '/api/map/regions'
+}
+```
+
+#### Результат
+
+| Дашборд | Локально | По сети |
+|---------|----------|---------|
+| **frontend (5173)** | ✅ | ✅ |
+| **frontend_map (5174)** | ✅ | ✅ ИСПРАВЛЕНО |
+| **frontend_compare (5175)** | ✅ | ✅ |
+
+**Документация:**
+- [docs/FRONTEND_MAP_NETWORK_FIX.md](docs/FRONTEND_MAP_NETWORK_FIX.md)
+
+---
+
 ## [1.5.1] - 2026-03-21
 
 ### 🔧 Автоматизация запуска Comparison Dashboard

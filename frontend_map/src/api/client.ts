@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Используем относительный путь для работы через Vite proxy
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// ✅ Явный путь для работы через Vite proxy (как в frontend и frontend_compare)
+const API_BASE_URL = '/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
